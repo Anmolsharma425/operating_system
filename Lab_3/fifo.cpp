@@ -29,26 +29,11 @@ int main(){
     for(int i=0;i<process_table.size();i++){
         process_table[i].insert(process_table[i].begin(),i+1);
     }
-    // for(vector<int> t:process_table){
-    //     cout<<t[0]<<endl;
-    // }
     queue<vector<int>> ready_queue;
     ready_queue.push(process_table[0]);
-    // order
-    // P1,1 0 0 = process P1 process burst time start time and then end time
     int cpu_time=process_table[0][1];
     int count=1;
     while(!ready_queue.empty()){
-        // curr=ready_queue.front();
-        // ready_queue.pop();
-        // cout<<curr<<" "<<burst<<" ";
-        // cout<<cpu_time<<" ";
-        // cout<<cpu_time+curr[2*burst-1]<<endl;
-        // cpu_time+=curr[2*burst-1];
-        // if(curr[2*burst]!=-1)
-        //     ready_queue.push(curr);
-        // if(curr=="process_4")
-        //     burst+=1;
         vector<int> curr_process=ready_queue.front();
         ready_queue.pop();
         int index=2;
