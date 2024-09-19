@@ -27,7 +27,7 @@ vector<vector<int>> read_from_file() {
     return data;
 }
 
-struct mycmp{
+struct BurstTimeComparator{
     bool operator()(vector<int> &P1, vector<int> &P2){
         int index1=2;
         for(;index1<P1.size();index1+=2){
@@ -46,7 +46,7 @@ struct mycmp{
     }
 };
 
-struct mycmp2{
+struct ArrivalTimeComparator{
     bool operator()(vector<int> &P1, vector<int> &P2){
         return P1[1]>P2[1];
     }
@@ -57,10 +57,10 @@ struct mycmp2{
 int main(){
     vector<vector<int>> process_table=read_from_file();
 
-    priority_queue<vector<int>, vector<vector<int>>, mycmp2> wait_queue(process_table.begin(), process_table.end());
+    priority_queue<vector<int>, vector<vector<int>>, ArrivalTimeComparator> wait_queue(process_table.begin(), process_table.end());
 
     //priority queue based on current cpu burst time
-    priority_queue<vector<int>, vector<vector<int>>, mycmp> ready_queue;
+    priority_queue<vector<int>, vector<vector<int>>, BurstTimeComparator> ready_queue;
 
     //initializing the cpu_time
     int cpu_time=wait_queue.top()[1];
