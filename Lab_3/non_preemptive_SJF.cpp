@@ -28,26 +28,21 @@ vector<vector<int>> read_from_file() {
 }
 
 struct BurstTimeComparator{
-    bool operator()(vector<int> &P1, vector<int> &P2){
+    bool operator()(const vector<int>& P1, const vector<int>& P2){
         int index1=2;
-        for(;index1<P1.size();index1+=2){
-            if(P1[index1]!=0)
-                break;
-        }
-
+        while(index1<P1.size() && P1[index1]==0) index1+=2;
+ 
         int index2=2;
-        for(;index2<P2.size();index2+=2){
-            if(P2[index2]!=0)
-                break;
-        }
-        if(index1>P1.size() || index2>P2.size())
-            return false;
+        while(index2<P2.size() && P2[index2]==0) index2+=2;
+
+        if(index1>P1.size() || index2>P2.size()) return false;
+
         return P1[index1]>P2[index2];
     }
 };
 
 struct ArrivalTimeComparator{
-    bool operator()(vector<int> &P1, vector<int> &P2){
+    bool operator()(const vector<int>& P1, const vector<int>& P2){
         return P1[1]>P2[1];
     }
 };
@@ -65,12 +60,13 @@ int main(){
     //initializing the cpu_time
     int cpu_time=wait_queue.top()[1];
 
-    //first process in the ready queue
-    ready_queue.push(wait_queue.top());
-    wait_queue.pop();
-
-    int count=1;
     while(!ready_queue.empty() || !wait_queue.empty()){
+        
+        // inserting all processes whose arrival time is less than cpu time
+        while(!wait_queue.empty() && cpu_time>=wait_queue.top()[1]){
+            ready_queue.push(wait_queue.top());
+            wait_queue.pop();
+        }
         int index=2;
         if(!ready_queue.empty()){
 
@@ -78,21 +74,14 @@ int main(){
             ready_queue.pop();
 
             //moving our index to non-zero cpu burst time index
-            while(index<curr_process.size() && curr_process[index]==0){
-                index+=2;
-            }
+            while(index<curr_process.size() && curr_process[index]==0)   index+=2;
 
             //if no non-zero cpu burst is found
-            if(index>=curr_process.size()){
-                continue;
-            }
-
-            int burst=index/2;   //current burst
+            if(index>=curr_process.size())    continue;
 
             //output
-            cout<<"P"<<curr_process[0]<<",";
-            cout<<burst<<" ";
-            cout<<cpu_time<<" "<<cpu_time+curr_process[index]<<endl;
+            //current burst = index/2
+            cout<<"P"<<curr_process[0]<<","<<index/2<<" "<<cpu_time<<" "<<cpu_time+curr_process[index]<<endl;
 
             //update the cpu_time and update the current process' cpu burst(current) time
             cpu_time+=curr_process[index]+1;
@@ -104,12 +93,6 @@ int main(){
             }
         }
         else cpu_time++;
-
-        // inserting all processes whose arrival time is less than cpu time
-        while(!wait_queue.empty() && cpu_time>=wait_queue.top()[1]){
-            ready_queue.push(wait_queue.top());
-            wait_queue.pop();
-        }
     }
     return 0;
 }
