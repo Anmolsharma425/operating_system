@@ -3,7 +3,7 @@
 using namespace std;
 
 vector<vector<int>> read_from_file() {
-    ifstream file("process2.dat");
+    ifstream file("process1.dat");
     vector<vector<int>> data;
     string line;
     int process_count = 1;
@@ -55,7 +55,7 @@ int main() {
             int selected_cpu = 0; 
             stringstream output;
             if (cpu1_available && cpu_time1 <= cpu_time2) {
-                output << "P" << curr_process[0] << ", CPU1, ";
+                output << "P" << curr_process[0] << ",";
                 selected_cpu = 1;
                 output << burst << " " << cpu_time1 << " " << cpu_time1 + curr_process[index];
                 cpu_time1 += curr_process[index];
@@ -63,7 +63,7 @@ int main() {
                 processor1_output.push_back(output.str());
             } 
             else if (cpu2_available) {
-                output << "P" << curr_process[0] << ", CPU2, ";
+                output << "P" << curr_process[0] << ",";
                 selected_cpu = 2;
                 output << burst << " " << cpu_time2 << " " << cpu_time2 + curr_process[index];
                 cpu_time2 += curr_process[index];
@@ -87,11 +87,11 @@ int main() {
             if (selected_cpu == 2) cpu2_available = true;
         }
     }
-    cout << "Processor 1 Execution Order:" << endl;
+    cout << "CPU0\n" << endl;
     for (const string &out : processor1_output) {
         cout << out << endl;
     }
-    cout << "Processor 2 Execution Order:" << endl;
+    cout << "\n\n\nCPU1\n" << endl;
     for (const string &out : processor2_output) {
         cout << out << endl;
     }

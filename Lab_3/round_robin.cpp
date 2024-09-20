@@ -4,7 +4,7 @@ using namespace std;
 
 
 vector<vector<int>> read_from_file() {
-    ifstream file("process3.dat");
+    ifstream file("process1.dat");
     vector<vector<int>> data;
     string line;
     int process_index = 1;
@@ -41,6 +41,9 @@ int main(){
 
     queue<vector<int>> ready_queue;
     
+    // for storing the output of simulator
+    vector<string> output;
+    
     //initializing the cpu_time
     int cpu_time=wait_queue.top()[1];
     ready_queue.push(wait_queue.top());
@@ -50,10 +53,12 @@ int main(){
 
 
         if(!ready_queue.empty()){
+            
+            
+            int index=2;                      //for calculating non-zero cpu burst index
+            int time_quantum=10;              //time quantum
 
-            int index=2, time_quantum=10;
-
-            vector<int> curr_process=ready_queue.front();
+            vector<int> curr_process=ready_queue.front();     
             ready_queue.pop();
 
             //moving our index to non-zero cpu burst time index
@@ -87,7 +92,8 @@ int main(){
                 }
             }
 
-            cout<<"P"<<curr_process[0]<<","<<index/2<<" "<<start_time<<" "<<cpu_time<<endl;
+            //storing outputs
+            output.push_back("P"+to_string(curr_process[0])+","+to_string(index/2)+" "+to_string(start_time)+" "+to_string(cpu_time));
         }
         else{
             cpu_time++;
@@ -97,19 +103,8 @@ int main(){
             }
         }
     }
+
+    //printing outputs
+    for(string s:output)  cout<<s<<endl;
     return 0;
 }
-
-//cpu_time wait_queue
-/*
-curr_process=ready_queue.top();
-ready_queue.pop();
-if(process_index!=curr_process[0])
-    output based on start, cpu_time-1, burst, process_index
-    start=cpu_time;
-    process_index=curr_process[0];
-cpu_time++;
-*/
-
-/*
- */

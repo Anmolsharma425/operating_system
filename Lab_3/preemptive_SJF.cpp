@@ -4,7 +4,7 @@ using namespace std;
 
 
 vector<vector<int>> read_from_file() {
-    ifstream file("process2.dat");
+    ifstream file("process1.dat");
     vector<vector<int>> data;
     string line;
     int process_index = 1;
@@ -52,10 +52,14 @@ struct ArrivalTimeComparator{
 int main(){
     vector<vector<int>> process_table=read_from_file();
 
-    priority_queue<vector<int>, vector<vector<int>>, ArrivalTimeComparator> wait_queue(process_table.begin(), process_table.end());
+    priority_queue<vector<int>, vector<vector<int>>, ArrivalTimeComparator> wait_queue
+                        (process_table.begin(), process_table.end());
 
     //priority queue based on current cpu burst time
     priority_queue<vector<int>, vector<vector<int>>, BurstTimeComparator> ready_queue;
+
+    // storing the output of simulator
+    vector<string> output;
 
     //initializing the cpu_time
     int cpu_time=wait_queue.top()[1];
@@ -86,8 +90,9 @@ int main(){
                 continue;
             }
             if(process_index!=curr_process[0] || burst!=index/2){
-                //output
-                cout<<"P"<<process_index<<","<<burst<<" "<<start_time<<" "<<cpu_time<<endl;
+                //storing output
+                output.push_back("P"+to_string(process_index)+","+to_string(burst)+
+                                    " "+to_string(start_time)+" "+to_string(cpu_time));
                 if(process_index==curr_process[0]){
                     start_time=cpu_time+curr_process[index-1];
                 }
@@ -110,7 +115,14 @@ int main(){
         }
         cpu_time++;
     }
-    cout<<"P"<<process_index<<","<<burst<<" "<<start_time<<" "<<cpu_time<<endl;
+
+    //storing output
+    output.push_back("P"+to_string(process_index)+","+to_string(burst)+" "
+                        +to_string(start_time)+" "+to_string(cpu_time));
+
+    //printing outputs
+    for(string s:output)  cout<<s<<endl;
+
     return 0;
 }
 

@@ -24,34 +24,32 @@ vector<vector<int>> read_from_file() {
     return data;
 }
 
-struct mycmp {
-    bool operator()(vector<int> &P1, vector<int> &P2) {
-        int index1 = 2;
-        for (; index1 < P1.size(); index1 += 2) {
-            if (P1[index1] != 0)
-                break;
-        }
-        int index2 = 2;
-        for (; index2 < P2.size(); index2 += 2) {
-            if (P2[index2] != 0)
-                break;
-        }
-        if (index1 > P1.size() || index2 > P2.size())
-            return false;
-        return P1[index1] > P2[index2];
+struct BurstTimeComparator{
+    bool operator()(const vector<int>& P1, const vector<int>& P2){
+        int index1=2;
+        while(index1<P1.size() && P1[index1]==0) index1+=2;
+ 
+        int index2=2;
+        while(index2<P2.size() && P2[index2]==0) index2+=2;
+
+        if(index1>P1.size() || index2>P2.size()) return false;
+
+        return P1[index1]>P2[index2];
     }
 };
 
-struct mycmp2 {
-    bool operator()(vector<int> &P1, vector<int> &P2) {
-        return P1[1] > P2[1]; // Sort by arrival time
+struct ArrivalTimeComparator{
+    bool operator()(const vector<int>& P1, const vector<int>& P2){
+        return P1[1]>P2[1];
     }
 };
 
 int main() {
     vector<vector<int>> process_table = read_from_file();
-    priority_queue<vector<int>, vector<vector<int>>, mycmp2> wait_queue(process_table.begin(), process_table.end());
-    priority_queue<vector<int>, vector<vector<int>>, mycmp> ready_queue;
+    priority_queue<vector<int>, vector<vector<int>>, ArrivalTimeComparator> wait_queue(
+        process_table.begin(), process_table.end());
+    priority_queue<vector<int>, vector<vector<int>>, BurstTimeComparator> ready_queue;
+    vector<string> output_cpu0, output_cpu1;  //for storing outputs
 
     // Initialize CPU times for processor 1 and processor 2
     int cpu_time1 = wait_queue.top()[1];  // First process arrives at this time
@@ -74,24 +72,26 @@ int main() {
 
             int burst = index / 2;
             int selected_cpu = 0;  // 1 for CPU1, 2 for CPU2
+            stringstream output;
 
             // Assign the task to CPU1 if it's available or its time is less than or equal to CPU2's time
             if (cpu_time1 <= cpu_time2) {
-                cout << "P" << curr_process[0] << ", ";
-                cout << "CPU1, ";
+                output << "P" << curr_process[0] << ",";
                 selected_cpu = 1;
-                cout << burst << " ";
-                cout << cpu_time1 << " " << cpu_time1 + curr_process[index] << endl;
+                output << burst << " ";
+                output << cpu_time1 << " " << cpu_time1 + curr_process[index] << endl;
                 cpu_time1 += curr_process[index] + 1; // Adding burst time and 1 unit overhead
+                output_cpu0.push_back(output.str());
             } else {  // Otherwise, assign the task to CPU2
-                cout << "P" << curr_process[0] << ", ";
-                cout << "CPU2, ";
+                output << "P" << curr_process[0] << ",";
                 selected_cpu = 2;
-                cout << burst << " ";
-                cout << cpu_time2 << " " << cpu_time2 + curr_process[index] << endl;
+                output << burst << " ";
+                output << cpu_time2 << " " << cpu_time2 + curr_process[index] << endl;
                 cpu_time2 += curr_process[index] + 1; // Adding burst time and 1 unit overhead
+                output_cpu1.push_back(output.str());
             }
 
+            
             curr_process[index] = 0;
 
             // If the process has more phases, add it back to the waiting queue
@@ -110,5 +110,10 @@ int main() {
         }
     }
 
+    // printing outputs
+    cout<<"CPU0\n"<<endl;
+    for(const string &out:output_cpu0) cout<<out;
+    cout<<"\n\n\nCPU1\n"<<endl;
+    for(const string &out:output_cpu1) cout<<out;
     return 0;
 }

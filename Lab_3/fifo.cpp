@@ -2,7 +2,7 @@
 #include<fstream>
 using namespace std;
 vector<vector<int>> read_from_file() {
-    ifstream file("process2.dat");
+    ifstream file("process1.dat");
     vector<vector<int>> data;
     string line;
     int process_count = 1;
@@ -30,6 +30,10 @@ int main(){
         process_table[i].insert(process_table[i].begin(),i+1);
     }
     queue<vector<int>> ready_queue;
+
+    // for storing the output of simulator
+    vector<string> output;
+
     ready_queue.push(process_table[0]);
     int cpu_time=process_table[0][1];
     int count=1;
@@ -42,10 +46,11 @@ int main(){
         }
         if(index>=curr_process.size())
             continue;
-        cout<<"P"<<curr_process[0]<<",";
-        int burst=index/2;
-        cout<<burst<<" ";
-        cout<<cpu_time<<" "<<cpu_time+curr_process[index]<<endl;
+
+        // storing output
+        output.push_back("P"+to_string(curr_process[0])+","+to_string(index/2)+
+                            " "+to_string(cpu_time)+" "+to_string(cpu_time+curr_process[index]));
+
         cpu_time+=curr_process[index];
         curr_process[index]=0;
         while(count<process_table.size()){
@@ -58,5 +63,9 @@ int main(){
         if(index+1<curr_process.size() && curr_process[index+1]!=-1)
             ready_queue.push(curr_process);
     }
+
+    //printing outputs
+    for(string s:output)  cout<<s<<endl;
+    
     return 0;
 }

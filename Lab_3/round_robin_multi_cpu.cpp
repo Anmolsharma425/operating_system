@@ -5,7 +5,7 @@ using namespace std;
 
 
 vector<vector<int>> read_from_file() {
-    ifstream file("process3.dat");
+    ifstream file("process1.dat");
     vector<vector<int>> data;
     string line;
     int process_index = 1;
@@ -41,12 +41,19 @@ int main(){
     priority_queue<vector<int>, vector<vector<int>>, arrival_time_comparator> wait_queue(process_table.begin(), process_table.end());
 
     queue<vector<int>> ready_queue;
+
+    // for output
+    vector<string> output_cpu0;
+    vector<string> output_cpu1;
     
-    //initializing the cpu_time
+    // initializing the cpu_time1 with first process arrival time
     int cpu_time1=wait_queue.top()[1];
     ready_queue.push(wait_queue.top());
     wait_queue.pop();
-    int cpu_time2=wait_queue.top()[1];
+
+    // initializing the cpu_time1 with second process arrival time
+    // Will cpu2 always start with second process?
+    int cpu_time2=wait_queue.top()[1];   
     
 
     while(!wait_queue.empty() || !ready_queue.empty()){
@@ -76,7 +83,7 @@ int main(){
                     cpu_time1 += curr_process[index];
                     curr_process[index] = 0;
                 }
-                cout<<"P"<<curr_process[0]<<", "<<"CPU1,"<<index/2<<" "<<start_time<<" "<<cpu_time1<<endl;
+                output_cpu0.push_back("P"+to_string(curr_process[0])+","+to_string(index/2)+" "+to_string(start_time)+" "+to_string(cpu_time1));
             }
             else{
                 int start_time=cpu_time2;
@@ -89,10 +96,11 @@ int main(){
                     cpu_time2 += curr_process[index];
                     curr_process[index] = 0;
                 }
-                cout<<"P"<<curr_process[0]<<", "<<"CPU2,"<<index/2<<" "<<start_time<<" "<<cpu_time2<<endl;
+                output_cpu1.push_back("P"+to_string(curr_process[0])+","+to_string(index/2)+" "+to_string(start_time)+" "+to_string(cpu_time2));
             }
 
-            // inserting all processes whose (cpu time <= arrival time)
+            // inserting all processes whose (max(cpu_time1, cpu_time2) <= arrival time)
+            // to ensure that 
             while(!wait_queue.empty() && max(cpu_time1, cpu_time2)>=wait_queue.top()[1]){
                 ready_queue.push(wait_queue.top());
                 wait_queue.pop();
@@ -117,19 +125,12 @@ int main(){
             }
         }
     }
+
+    // printing outputs
+    cout<<"CPU0\n"<<endl;
+    for(string s:output_cpu0) cout<<s<<endl;
+    
+    cout<<"\n\n\nCPU1\n"<<endl;
+    for(string s:output_cpu1) cout<<s<<endl;
     return 0;
 }
-
-//cpu_time wait_queue
-/*
-curr_process=ready_queue.top();
-ready_queue.pop();
-if(process_index!=curr_process[0])
-    output based on start, cpu_time-1, burst, process_index
-    start=cpu_time;
-    process_index=curr_process[0];
-cpu_time++;
-*/
-
-/*
- */

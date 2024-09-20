@@ -3,7 +3,7 @@
 using namespace std;
 
 vector<vector<int>> read_from_file() {
-    ifstream file("process2.dat");
+    ifstream file("process1.dat");
     vector<vector<int>> data;
     string line;
     int process_index = 1;
@@ -53,6 +53,7 @@ int main() {
 
     // Priority queue based on current CPU burst time (for preemptive SJF)
     priority_queue<vector<int>, vector<vector<int>>, BurstTimeComparator> ready_queue;
+    vector<string> output_cpu0, output_cpu1;
 
     // Initialize CPU times for both processors
     int cpu_time1 = wait_queue.top()[1];
@@ -74,7 +75,7 @@ int main() {
         }
 
         int index = 2;
-
+        stringstream output;
         // CPU1 picks the next shortest job
         if (!ready_queue.empty() && (cpu_time1 <= cpu_time2 || process_index2 == -1)) {
             vector<int> curr_process = ready_queue.top();
@@ -91,7 +92,8 @@ int main() {
             if (process_index1 != curr_process[0] || burst1 != index / 2) {
                 if (process_index1 != -1) {
                     // Output the previous process handled by CPU1
-                    cout << "P" << process_index1 << ", CPU1, " << burst1 << " " << start_time1 << " " << cpu_time1 << endl;
+                    output << "P" << process_index1 << "," << burst1 << " " << start_time1 << " " << cpu_time1 << endl;
+                    output_cpu0.push_back(output.str());
                 }
                 start_time1 = cpu_time1;
                 process_index1 = curr_process[0];
@@ -126,7 +128,8 @@ int main() {
             if (process_index2 != curr_process[0] || burst2 != index / 2) {
                 if (process_index2 != -1) {
                     // Output the previous process handled by CPU2
-                    cout << "P" << process_index2 << ", CPU2, " << burst2 << " " << start_time2 << " " << cpu_time2 << endl;
+                    output << "P" << process_index2 << "," << burst2 << " " << start_time2 << " " << cpu_time2 << endl;
+                    output_cpu1.push_back(output.str());
                 }
                 start_time2 = cpu_time2;
                 process_index2 = curr_process[0];
@@ -156,12 +159,23 @@ int main() {
     }
 
     // Output the remaining tasks processed by each CPU
+    
     if (process_index1 != -1) {
-        cout << "P" << process_index1 << ", CPU1, " << burst1 << " " << start_time1 << " " << cpu_time1 << endl;
+        stringstream output;
+        output << "P" << process_index1 << "," << burst1 << " " << start_time1 << " " << cpu_time1 << endl;
+        output_cpu0.push_back(output.str());
     }
     if (process_index2 != -1) {
-        cout << "P" << process_index2 << ", CPU2, " << burst2 << " " << start_time2 << " " << cpu_time2 << endl;
+        stringstream output;
+        output << "P" << process_index2 << "," << burst2 << " " << start_time2 << " " << cpu_time2 << endl;
+        output_cpu1.push_back(output.str());
     }
+
+    //printing ouptus
+    cout<<"CPU0\n"<<endl;
+    for(const string &out:output_cpu0) cout<<out;
+    cout<<"\n\n\nCPU1\n"<<endl;
+    for(const string &out:output_cpu1) cout<<out;
 
     return 0;
 }

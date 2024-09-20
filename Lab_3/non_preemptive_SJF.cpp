@@ -4,7 +4,7 @@ using namespace std;
 
 
 vector<vector<int>> read_from_file() {
-    ifstream file("process3.dat");
+    ifstream file("process1.dat");
     vector<vector<int>> data;
     string line;
     int process_index = 1;
@@ -57,6 +57,9 @@ int main(){
     //priority queue based on current cpu burst time
     priority_queue<vector<int>, vector<vector<int>>, BurstTimeComparator> ready_queue;
 
+    // vector to store the output of simulator
+    vector<string> output;
+
     //initializing the cpu_time
     int cpu_time=wait_queue.top()[1];
 
@@ -79,9 +82,8 @@ int main(){
             //if no non-zero cpu burst is found
             if(index>=curr_process.size())    continue;
 
-            //output
-            //current burst = index/2
-            cout<<"P"<<curr_process[0]<<","<<index/2<<" "<<cpu_time<<" "<<cpu_time+curr_process[index]<<endl;
+            //storing outputs
+            output.push_back("P"+to_string(curr_process[0])+","+to_string(index/2)+" "+to_string(cpu_time)+" "+to_string(cpu_time+curr_process[index]));
 
             //update the cpu_time and update the current process' cpu burst(current) time
             cpu_time+=curr_process[index]+1;
@@ -94,6 +96,10 @@ int main(){
         }
         else cpu_time++;
     }
+
+    //printing outputs
+    for(string s:output)  cout<<s<<endl;
+
     return 0;
 }
 
