@@ -59,6 +59,9 @@ int main(){
     priority_queue<vector<int>, vector<vector<int>>, BurstTimeComparator> ready_queue;
 
     // storing the output of simulator
+    int makespan=wait_queue.top()[1];
+    vector<int> wait_time(process_table.size(), 0);
+    vector<int> run_time(process_table.size(), 0);
     vector<string> output;
 
     //initializing the cpu_time
@@ -81,14 +84,12 @@ int main(){
             ready_queue.pop();
 
             //moving our index to non-zero cpu burst time index
-            while(index<curr_process.size() && curr_process[index]==0){
-                index+=2;
-            }
+            while(index<curr_process.size() && curr_process[index]==0)  index+=2;
 
             //if no non-zero cpu burst is found
-            if(index>=curr_process.size()){
-                continue;
-            }
+            if(index>=curr_process.size())  continue;
+
+            wait_time[curr_process[0]-1]+=(cpu_time-curr_process[1]);
             if(process_index!=curr_process[0] || burst!=index/2){
                 //storing output
                 output.push_back("P"+to_string(process_index)+","+to_string(burst)+
@@ -100,6 +101,7 @@ int main(){
                 process_index=curr_process[0];
                 burst=index/2;   //updating to current process burst
             }
+            run_time[curr_process[0]-1]+=1;
 
             //cpu burst(current) time
             curr_process[index]--;
@@ -120,8 +122,21 @@ int main(){
     output.push_back("P"+to_string(process_index)+","+to_string(burst)+" "
                         +to_string(start_time)+" "+to_string(cpu_time));
 
+    makespan=cpu_time-makespan;
+    int total_wt=0;
+    for(int i:wait_time)    total_wt+=i;
+    int max_wait_time = *max_element(wait_time.begin(), wait_time.end());
+    int total_rt=0;
+    for(int i:run_time)     total_rt+=i;
+    int max_run_time = *max_element(run_time.begin(), run_time.end());    
+
     //printing outputs
     for(string s:output)  cout<<s<<endl;
+    cout<<"\n"<<"Makespan: "<<makespan<<endl;
+    cout<<"Average Waiting Time: "<<(double)total_wt/(double)process_table.size()<<endl;
+    cout<<"Maximum Waiting Time: "<<max_wait_time<<endl;
+    cout<<"Average Running Time: "<<(double)total_rt/(double)process_table.size()<<endl;
+    cout<<"Maximum Running Time: "<<max_run_time<<endl;
 
     return 0;
 }
