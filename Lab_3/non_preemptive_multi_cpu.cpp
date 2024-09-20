@@ -3,7 +3,7 @@
 using namespace std;
 
 vector<vector<int>> read_from_file() {
-    ifstream file("process3.dat");
+    ifstream file("process1.dat");
     vector<vector<int>> data;
     string line;
     int process_index = 1;
@@ -68,12 +68,9 @@ int main() {
             vector<int> curr_process = ready_queue.top();
             ready_queue.pop();
 
-            while (index < curr_process.size() && curr_process[index] == 0) {
-                index += 2;
-            }
-            if (index >= curr_process.size()) {
-                continue;
-            }
+            while (index < curr_process.size() && curr_process[index] == 0)     index += 2;
+
+            if (index >= curr_process.size())   continue;
 
             int burst = index / 2;
             int selected_cpu = 0;  // 1 for CPU1, 2 for CPU2
