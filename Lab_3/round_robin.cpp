@@ -105,7 +105,7 @@ int main(){
                     curr_process[1] = cpu_time + curr_process[index+1];
                     wait_queue.push(curr_process);
                 }
-                else completion_time[curr_process[0]]=cpu_time-completion_time[curr_process[0]];
+                else completion_time[curr_process[0]-1]=cpu_time-completion_time[curr_process[0]-1];
             }
 
             //storing outputs
