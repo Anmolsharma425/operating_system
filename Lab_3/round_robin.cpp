@@ -3,8 +3,8 @@
 using namespace std;
 
 
-vector<vector<int>> read_from_file() {
-    ifstream file("process1.dat");
+vector<vector<int>> read_from_file(string filename) {
+    ifstream file(filename);
     vector<vector<int>> data;
     string line;
     int process_index = 1;
@@ -34,8 +34,10 @@ struct arrival_time_comparator{
 };
 //curr_process goes into the wait queue with updated arrival time
 //wait_queue and ready_queue both should be empty
-int main(){
-    vector<vector<int>> process_table=read_from_file();
+int main(int argc, char *argv[]) {
+    
+    string filename = argv[1];
+    vector<vector<int>> process_table = read_from_file(filename);
     priority_queue<vector<int>, vector<vector<int>>, arrival_time_comparator> wait_queue(
         process_table.begin(), process_table.end());
     queue<vector<int>> ready_queue;

@@ -2,8 +2,8 @@
 #include <fstream>
 using namespace std;
 
-vector<vector<int>> read_from_file() {
-    ifstream file("process1.dat");
+vector<vector<int>> read_from_file(string filename) {
+    ifstream file(filename);
     vector<vector<int>> data;
     string line;
     int process_index = 1;
@@ -44,8 +44,10 @@ struct ArrivalTimeComparator {
     }
 };
 
-int main() {
-    vector<vector<int>> process_table = read_from_file();
+int main(int argc, char *argv[]) {
+    
+    string filename = argv[1];
+    vector<vector<int>> process_table = read_from_file(filename);
     priority_queue<vector<int>, vector<vector<int>>, ArrivalTimeComparator> wait_queue(
         process_table.begin(), process_table.end());
     priority_queue<vector<int>, vector<vector<int>>, BurstTimeComparator> ready_queue;

@@ -3,8 +3,8 @@
 using namespace std;
 
 // Function to read process details from file
-vector<vector<int>> read_from_file() {
-    ifstream file("process1.dat");
+vector<vector<int>> read_from_file(string filename) {
+    ifstream file(filename);
     vector<vector<int>> data;
     string line;
     int process_count = 1;
@@ -24,9 +24,10 @@ vector<vector<int>> read_from_file() {
     file.close();
     return data;
 }
-
-int main() {
-    vector<vector<int>> process_table = read_from_file();
+int main(int argc, char *argv[]) {
+    
+    string filename = argv[1];
+    vector<vector<int>> process_table = read_from_file(filename);
     for (int i = 0; i < process_table.size(); i++) {
         process_table[i].insert(process_table[i].begin(), i + 1);  // Add process ID to the start
     }

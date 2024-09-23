@@ -71,5 +71,4 @@ run-round_robin_multi_cpu: round_robin_multi_cpu.out
 
 # Clean all outputs
 clean:
-	rm -f fifo.out fifo_multi_cpu.out non_preemptive_SJF.out non_preemptive_multi_cpu.out \
-		preemptive_SJF.out preemptive_SJF_multi_cpu.out round_robin.out round_robin_multi_cpu.out
+	rm -f *.out

@@ -3,8 +3,8 @@
 using namespace std;
 
 // Function to read the process details from the file
-vector<vector<int>> read_from_file() {
-    ifstream file("process1.dat");
+vector<vector<int>> read_from_file(string filename) {
+    ifstream file(filename);
     vector<vector<int>> data;
     string line;
     int process_index = 1;
@@ -29,8 +29,10 @@ vector<vector<int>> read_from_file() {
     return data;
 }
 
-int main() {
-    vector<vector<int>> process_table = read_from_file();
+int main(int argc, char *argv[]) {
+    
+    string filename = argv[1];
+    vector<vector<int>> process_table = read_from_file(filename);
     queue<vector<int>> ready_queue;
 
     // Variables to store simulation output and metrics
