@@ -2,7 +2,7 @@
 #include<fstream>
 using namespace std;
 
-
+// Function to read process details from the file
 vector<vector<int>> read_from_file() {
     ifstream file("process1.dat");
     vector<vector<int>> data;
@@ -18,7 +18,7 @@ vector<vector<int>> read_from_file() {
         }
 
         if (!numbers.empty()) {
-            numbers.insert(numbers.begin(),process_index);
+            numbers.insert(numbers.begin(), process_index);
             process_index++;
             data.push_back(numbers);
         }
@@ -27,99 +27,104 @@ vector<vector<int>> read_from_file() {
     return data;
 }
 
-struct BurstTimeComparator{
-    bool operator()(const vector<int>& P1, const vector<int>& P2){
-        int index1=2;
-        while(index1<P1.size() && P1[index1]==0) index1+=2;
- 
-        int index2=2;
-        while(index2<P2.size() && P2[index2]==0) index2+=2;
+// Comparator for selecting process with shortest burst time
+struct BurstTimeComparator {
+    bool operator()(const vector<int>& P1, const vector<int>& P2) {
+        int index1 = 2;
+        while (index1 < P1.size() && P1[index1] == 0) index1 += 2;
 
-        if(index1>P1.size() || index2>P2.size()) return false;
+        int index2 = 2;
+        while (index2 < P2.size() && P2[index2] == 0) index2 += 2;
 
-        return P1[index1]>P2[index2];
+        if (index1 >= P1.size() || index2 >= P2.size()) return false;
+
+        return P1[index1] > P2[index2]; // Shortest job comes first
     }
 };
 
-struct ArrivalTimeComparator{
-    bool operator()(const vector<int>& P1, const vector<int>& P2){
-        return P1[1]>P2[1];
+// Comparator for selecting process based on arrival time
+struct ArrivalTimeComparator {
+    bool operator()(const vector<int>& P1, const vector<int>& P2) {
+        return P1[1] > P2[1];  // Higher arrival time comes later
     }
 };
 
-//curr_process goes into the wait queue with updated arrival time
-//wait_queue and ready_queue both should be empty
-int main(){
-    vector<vector<int>> process_table=read_from_file();
-    //priority queue based on arrival time and current cpu burst time
-    priority_queue<vector<int>, vector<vector<int>>, ArrivalTimeComparator> wait_queue(
-        process_table.begin(), process_table.end());
+int main() {
+    vector<vector<int>> process_table = read_from_file();
+
+    // Priority queues: One for processes waiting to arrive, another for ready-to-execute processes
+    priority_queue<vector<int>, vector<vector<int>>, ArrivalTimeComparator> wait_queue(process_table.begin(), process_table.end());
     priority_queue<vector<int>, vector<vector<int>>, BurstTimeComparator> ready_queue;
-    
-    
 
-    // vector to store the output of simulator
-    int makespan=wait_queue.top()[1];
-    vector<int> wait_time(process_table.size(), 0);
-    vector<int> run_time(process_table.size(), 0);
-    vector<string> output;
+    // Variables to store various outputs and metrics
+    int makespan = wait_queue.top()[1]; // Keeps track of the time until all processes finish
+    vector<int> wait_time(process_table.size(), 0);   // Wait time for each process
+    vector<int> completion_time(process_table.size(), 0); // Completion time for each process
+    vector<string> output; // Stores the sequence of process executions
 
-    //initializing the cpu_time
-    int cpu_time=wait_queue.top()[1];
+    // Start the simulation from the time of the first arriving process
+    int cpu_time = wait_queue.top()[1];
 
-    while(!ready_queue.empty() || !wait_queue.empty()){
-        
-        // inserting all processes whose arrival time is less than cpu time
-        while(!wait_queue.empty() && cpu_time>=wait_queue.top()[1]){
+    while (!ready_queue.empty() || !wait_queue.empty()) {
+        // Move all processes whose arrival time is <= current CPU time to the ready queue
+        while (!wait_queue.empty() && cpu_time >= wait_queue.top()[1]) {
             ready_queue.push(wait_queue.top());
             wait_queue.pop();
         }
-        int index=2;
-        if(!ready_queue.empty()){
 
-            vector<int> curr_process=ready_queue.top();
+        int index = 2;
+        if (!ready_queue.empty()) {
+            vector<int> curr_process = ready_queue.top();
             ready_queue.pop();
 
-            //moving our index to non-zero cpu burst time index
-            while(index<curr_process.size() && curr_process[index]==0)   index+=2;
+            // Move index to the first non-zero burst time
+            while (index < curr_process.size() && curr_process[index] == 0) index += 2;
 
-            //if no non-zero cpu burst is found
-            if(index>=curr_process.size())    continue;
+            // If no valid burst found, continue
+            if (index >= curr_process.size()) continue;
 
+            // Update wait time (the time the process waited in the queue)
+            wait_time[curr_process[0] - 1] += (cpu_time - curr_process[1]);
 
-            //storing outputs
-            wait_time[curr_process[0]-1]+=(cpu_time-curr_process[1]);
-            output.push_back("P"+to_string(curr_process[0])+","+to_string(index/2)+" "+to_string(cpu_time)+" "+to_string(cpu_time+curr_process[index]));
-            run_time[curr_process[0]-1]+=curr_process[index];
-            //update the cpu_time and update the current process' cpu burst(current) time
-            cpu_time+=curr_process[index];
-            curr_process[index]=0;
+            // Store output (process execution details)
+            output.push_back("P" + to_string(curr_process[0]) + "," + to_string(index / 2) + " " + to_string(cpu_time) + " " + to_string(cpu_time + curr_process[index]));
 
-            if(curr_process[index+1]!=-1  && curr_process[index+2]!=-1){
-                curr_process[1]=cpu_time+curr_process[index+1];
+            // Update CPU time (current process finishes its burst)
+            cpu_time += curr_process[index];
+            curr_process[index] = 0;  // Mark current burst as completed
+
+            // Record the process completion time
+            completion_time[curr_process[0] - 1] = cpu_time;
+
+            // If there are more bursts remaining, add the next burst (if applicable)
+            if (curr_process[index + 1] != -1 && curr_process[index + 2] != -1) {
+                curr_process[1] = cpu_time + curr_process[index + 1]; // Set the arrival time for next burst after I/O
                 wait_queue.push(curr_process);
             }
         }
-        else cpu_time++;
+        else {
+            cpu_time++;  // If no process is ready, move to the next time unit
+        }
     }
 
-    makespan=cpu_time-makespan;
-    int total_wt=0;
-    for(int i:wait_time)    total_wt+=i;
-    int max_wait_time=*max_element(wait_time.begin(), wait_time.end());
-    int total_rt=0;
-    for(int i:run_time)     total_rt+=i;
-    int max_run_time=*max_element(run_time.begin(), run_time.end());
+    // Calculate and print the final metrics
+    makespan = cpu_time - makespan;  // Total time to complete all processes
+    int total_wait_time = accumulate(wait_time.begin(), wait_time.end(), 0);  // Total waiting time
+    int max_wait_time = *max_element(wait_time.begin(), wait_time.end());     // Maximum waiting time
+    int total_completion_time = accumulate(completion_time.begin(), completion_time.end(), 0);  // Total completion time
+    int max_completion_time = *max_element(completion_time.begin(), completion_time.end());  // Maximum completion time
 
-    //printing outputs
-    for(string s:output)  cout<<s<<endl;
-    cout<<"\nMakespan: "<<makespan<<endl;
-    cout<<"Average Waiting Time: "<<(double)total_wt/(double)process_table.size()<<endl;
-    cout<<"Maximum Waiting Time: "<<max_wait_time<<endl;
-    cout<<"Average Running Time: "<<(double)total_rt/(double)process_table.size()<<endl;
-    cout<<"Maximum Running Time: "<<max_run_time<<endl;
+    // Output the process execution details
+    for (string s : output) {
+        cout << s << endl;
+    }
+
+    // Output the metrics
+    cout << "\nMakespan: " << makespan << endl;
+    cout << "Average Waiting Time: " << (double)total_wait_time / (double)process_table.size() << endl;
+    cout << "Maximum Waiting Time: " << max_wait_time << endl;
+    cout << "Average Completion Time: " << (double)total_completion_time / (double)process_table.size() << endl;
+    cout << "Maximum Completion Time: " << max_completion_time << endl;
 
     return 0;
 }
-
- 
