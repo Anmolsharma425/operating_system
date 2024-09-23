@@ -1,58 +1,75 @@
-
-Conversation opened. 1 unread message.
-
-Skip to content
-Using IIT Dharwad Mail with screen readers
-1 of 10,018
-(no subject)
-Inbox
-Amit Singh
-	
-5:25 PM (2 minutes ago)
-	
-to me
+# For FIFO (single CPU)
 build-fifo: fifo.out
 
 fifo.out: fifo.cpp
-    g++ -g fifo.cpp -o fifo.out
-
+	g++ -g fifo.cpp -o fifo.out
 run-fifo: fifo.out
-    ./fifo.out process1.dat
+	./fifo.out process1.dat
 
-clean-fifo:
-    rm fifo.out
+# For FIFO (multi CPU)
+build-fifo_multi_cpu: fifo_multi_cpu.out
 
+fifo_multi_cpu.out: fifo_multi_cpu.cpp
+	g++ -g fifo_multi_cpu.cpp -o fifo_multi_cpu.out
 
-build-non_pre_sjf: non_pre_sjf.out
+run-fifo_multi_cpu: fifo_multi_cpu.out
+	./fifo_multi_cpu.out process1.dat
 
-non_pre_sjf.out: non_pre_sjf.cpp
-    g++ -g non_pre_sjf.cpp -o non_pre_sjf.out
+# For Non-Preemptive SJF (single CPU)
+build-non_preemptive_SJF: non_preemptive_SJF.out
 
-run-non_pre_sjf: non_pre_sjf.out
-    ./non_pre_sjf.out process1.dat
+non_preemptive_SJF.out: non_preemptive_SJF.cpp
+	g++ -g non_preemptive_SJF.cpp -o non_preemptive_SJF.out
 
-clean-non_pre_sjf:
-    rm non_pre_sjf.out
+run-non_preemptive_SJF: non_preemptive_SJF.out
+	./non_preemptive_SJF.out process1.dat
 
+# For Non-Preemptive SJF (multi CPU)
+build-non_preemptive_multi_cpu: non_preemptive_multi_cpu.out
 
-build-pre_sjf: pre_sjf.out
+non_preemptive_multi_cpu.out: non_preemptive_multi_cpu.cpp
+	g++ -g non_preemptive_multi_cpu.cpp -o non_preemptive_multi_cpu.out
 
-pre_sjf.out: pre_sjf.cpp
-    g++ -g pre_sjf.cpp -o pre_sjf.out
+run-non_preemptive_multi_cpu: non_preemptive_multi_cpu.out
+	./non_preemptive_multi_cpu.out process1.dat
 
-run-pre_sjf: pre_sjf.out
-    ./pre_sjf.out process1.dat
+# For Preemptive SJF (single CPU)
+build-preemptive_SJF: preemptive_SJF.out
 
-clean-pre_sjf:
-    rm pre_sjf.out
+preemptive_SJF.out: preemptive_SJF.cpp
+	g++ -g preemptive_SJF.cpp -o preemptive_SJF.out
 
+run-preemptive_SJF: preemptive_SJF.out
+	./preemptive_SJF.out process1.dat
+
+# For Preemptive SJF (multi CPU)
+build-preemptive_SJF_multi_cpu: preemptive_SJF_multi_cpu.out
+
+preemptive_SJF_multi_cpu.out: preemptive_SJF_multi_cpu.cpp
+	g++ -g preemptive_SJF_multi_cpu.cpp -o preemptive_SJF_multi_cpu.out
+
+run-preemptive_SJF_multi_cpu: preemptive_SJF_multi_cpu.out
+	./preemptive_SJF_multi_cpu.out process1.dat
+
+# For Round Robin (single CPU)
 build-round_robin: round_robin.out
 
 round_robin.out: round_robin.cpp
-    g++ -g round_robin.cpp -o round_robin.out
+	g++ -g round_robin.cpp -o round_robin.out
 
 run-round_robin: round_robin.out
-    ./round_robin.out process1.dat
+	./round_robin.out process1.dat
 
-clean-round_robin:
-    rm round_robin.out
+# For Round Robin (multi CPU)
+build-round_robin_multi_cpu: round_robin_multi_cpu.out
+
+round_robin_multi_cpu.out: round_robin_multi_cpu.cpp
+	g++ -g round_robin_multi_cpu.cpp -o round_robin_multi_cpu.out
+
+run-round_robin_multi_cpu: round_robin_multi_cpu.out
+	./round_robin_multi_cpu.out process1.dat
+
+# Clean all outputs
+clean:
+	rm -f fifo.out fifo_multi_cpu.out non_preemptive_SJF.out non_preemptive_multi_cpu.out \
+		preemptive_SJF.out preemptive_SJF_multi_cpu.out round_robin.out round_robin_multi_cpu.out

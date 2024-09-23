@@ -29,6 +29,7 @@ int main() {
     for (int i = 0; i < process_table.size(); i++) {
         process_table[i].insert(process_table[i].begin(), i + 1);
     }
+    
     queue<vector<int>> ready_queue;
     ready_queue.push(process_table[0]);
     int cpu_time1 = process_table[0][1];  
@@ -37,6 +38,11 @@ int main() {
     bool cpu1_available = true, cpu2_available = true;
     vector<string> processor1_output, processor2_output;
 
+    // For calculating the required metrics
+    int makespan = cpu_time1;  // Start from the arrival time of the first process
+    vector<int> wait_time(process_table.size(), 0);
+    vector<int> run_time(process_table.size(), 0);
+    
     while (!ready_queue.empty() || count < process_table.size()) {
         if (ready_queue.empty() && count < process_table.size()) {
             ready_queue.push(process_table[count]);
@@ -51,13 +57,20 @@ int main() {
             }
             if(index >= curr_process.size()) 
                 continue;
+
             int burst = index / 2;
             int selected_cpu = 0; 
             stringstream output;
+            
             if (cpu1_available && cpu_time1 <= cpu_time2) {
                 output << "P" << curr_process[0] << ",";
                 selected_cpu = 1;
                 output << burst << " " << cpu_time1 << " " << cpu_time1 + curr_process[index];
+                
+                // Update wait time and run time for this process
+                wait_time[curr_process[0] - 1] += (cpu_time1 - curr_process[1]);
+                run_time[curr_process[0] - 1] += curr_process[index];
+
                 cpu_time1 += curr_process[index];
                 cpu1_available = false;
                 processor1_output.push_back(output.str());
@@ -66,10 +79,16 @@ int main() {
                 output << "P" << curr_process[0] << ",";
                 selected_cpu = 2;
                 output << burst << " " << cpu_time2 << " " << cpu_time2 + curr_process[index];
+                
+                // Update wait time and run time for this process
+                wait_time[curr_process[0] - 1] += (cpu_time2 - curr_process[1]);
+                run_time[curr_process[0] - 1] += curr_process[index];
+
                 cpu_time2 += curr_process[index];
                 cpu2_available = false;
                 processor2_output.push_back(output.str());
             }
+            
             curr_process[index] = 0;
             while (count < process_table.size()) {
                 if (process_table[count][1] <= min(cpu_time1, cpu_time2)) {
@@ -87,6 +106,17 @@ int main() {
             if (selected_cpu == 2) cpu2_available = true;
         }
     }
+
+    // Calculating makespan, waiting time, and running time
+    makespan = max(cpu_time1, cpu_time2) - makespan;  // Time difference from first arrival to last process end
+
+    int total_wt = accumulate(wait_time.begin(), wait_time.end(), 0);
+    int max_wait_time = *max_element(wait_time.begin(), wait_time.end());
+
+    int total_rt = accumulate(run_time.begin(), run_time.end(), 0);
+    int max_run_time = *max_element(run_time.begin(), run_time.end());
+
+    // Output for processors
     cout << "CPU0\n" << endl;
     for (const string &out : processor1_output) {
         cout << out << endl;
@@ -95,5 +125,13 @@ int main() {
     for (const string &out : processor2_output) {
         cout << out << endl;
     }
+
+    // Printing required metrics
+    cout << "\nMakespan: " << makespan << endl;
+    cout << "Average Waiting Time: " << (double)total_wt / (double)process_table.size() << endl;
+    cout << "Maximum Waiting Time: " << max_wait_time << endl;
+    cout << "Average Running Time: " << (double)total_rt / (double)process_table.size() << endl;
+    cout << "Maximum Running Time: " << max_run_time << endl;
+
     return 0;
 }
