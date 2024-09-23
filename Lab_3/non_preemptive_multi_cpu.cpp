@@ -61,6 +61,9 @@ int main() {
 
     vector<int> wait_time(process_table.size(), 0);
     vector<int> run_time(process_table.size(), 0);
+    for(auto i:process_table){
+        run_time.push_back(i[1]);
+    }
     int total_waiting_time = 0;
     int total_running_time = 0;
 
@@ -89,7 +92,7 @@ int main() {
 
                 // Update wait time and run time for this process
                 wait_time[curr_process[0] - 1] += (cpu_time1 - curr_process[1]);
-                run_time[curr_process[0] - 1] += curr_process[index];
+                // run_time[curr_process[0] - 1] += curr_process[index];
 
                 cpu_time1 += curr_process[index] + 1;  // Adding burst time and 1 unit overhead
                 output_cpu0.push_back(output.str());
@@ -101,7 +104,7 @@ int main() {
 
                 // Update wait time and run time for this process
                 wait_time[curr_process[0] - 1] += (cpu_time2 - curr_process[1]);
-                run_time[curr_process[0] - 1] += curr_process[index];
+                // run_time[curr_process[0] - 1] += curr_process[index];
 
                 cpu_time2 += curr_process[index] + 1;  // Adding burst time and 1 unit overhead
                 output_cpu1.push_back(output.str());
@@ -113,6 +116,12 @@ int main() {
             if (curr_process[index + 1] != -1 && curr_process[index + 2] != -1) {
                 curr_process[1] = max(cpu_time1, cpu_time2) + curr_process[index + 1];  // Update the next start time
                 wait_queue.push(curr_process);
+            }
+            else{
+                if(selected_cpu==1)
+                run_time[curr_process[0]-1]=cpu_time1-run_time[curr_process[0]-1];
+                if(selected_cpu==2)
+                run_time[curr_process[0]-1]=cpu_time2-run_time[curr_process[0]-1];
             }
         } else {
             // If no processes are ready, increment both CPUs' time to the next available process
@@ -147,8 +156,8 @@ int main() {
     cout << "\nMakespan: " << makespan << endl;
     cout << "Average Waiting Time: " << (double)total_wt / (double)process_table.size() << endl;
     cout << "Maximum Waiting Time: " << max_wait_time << endl;
-    cout << "Average Running Time: " << (double)total_rt / (double)process_table.size() << endl;
-    cout << "Maximum Running Time: " << max_run_time << endl;
+    cout << "Average Completion Time: " << (double)total_rt / (double)process_table.size() << endl;
+    cout << "Maximum Completion Time: " << max_run_time << endl;
 
     return 0;
 }
