@@ -44,7 +44,10 @@ int main(){
     vector<string> output;
     int makespan=0;
     vector<int> wait_time(process_table.size()+1, 0);
-    vector<int> run_time(process_table.size()+1, 0);
+    vector<int> completion_time(process_table.size()+1, 0);
+    for(auto i:process_table){
+        completion_time.push_back(i[1]);
+    }
     
     //initializing the cpu_time
     int cpu_time=wait_queue.top()[1];
@@ -69,7 +72,7 @@ int main(){
             while(index<curr_process.size() && curr_process[index]==0)    index+=2;
 
             //if no non-zero cpu burst is found
-            if(index>=curr_process.size())     continue;
+            if(index>=curr_process.size())  continue;
 
             // storing waiting time for each process
             wait_time[curr_process[0]-1]+=(cpu_time-curr_process[1]);
@@ -77,13 +80,13 @@ int main(){
             int start_time=cpu_time;
             if(curr_process[index]>=time_quantum){
                 curr_process[index]-=time_quantum;
-                run_time[curr_process[0]-1]+=time_quantum;
+                
                 cpu_time+=time_quantum;
             }
             
             else{
                 cpu_time += curr_process[index];
-                run_time[curr_process[0]-1]+=curr_process[index];
+                
                 curr_process[index] = 0;
             }
 
@@ -102,6 +105,7 @@ int main(){
                     curr_process[1] = cpu_time + curr_process[index+1];
                     wait_queue.push(curr_process);
                 }
+                else completion_time[curr_process[0]]=cpu_time-completion_time[curr_process[0]];
             }
 
             //storing outputs
@@ -121,16 +125,16 @@ int main(){
     int total_wt=0;
     for(int i:wait_time)    total_wt+=i;
     int max_wait_time = *max_element(wait_time.begin(), wait_time.end());
-    int total_rt=0;
-    for(int i:run_time)     total_rt+=i;
-    int max_run_time = *max_element(run_time.begin(), run_time.end());
+    int total_ct=0;
+    for(int i:completion_time)     total_ct+=i;
+    int max_compl_time = *max_element(completion_time.begin(), completion_time.end());
 
     //printing outputs
     for(string s:output)  cout<<s<<endl;
     cout<<"\n"<<"Makespan: "<<makespan<<endl;
     cout<<"Average Waiting Time: "<<(double)total_wt/(double)process_table.size()<<endl;
     cout<<"Maximum Waiting Time: "<<max_wait_time<<endl;
-    cout<<"Average Running Time: "<<(double)total_rt/(double)process_table.size()<<endl;
-    cout<<"Maximum Running Time: "<<max_run_time<<endl;
+    cout<<"Average Completion Time: "<<(double)total_ct/(double)process_table.size()<<endl;
+    cout<<"Maximum Completion Time: "<<max_compl_time<<endl;
     return 0;
 }
