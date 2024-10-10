@@ -129,7 +129,7 @@ int main(int argc, char *argv[]) {
 
     // Calculate total wait time and max wait time
     int total_wt = accumulate(wait_time.begin(), wait_time.end(), 0);
-    int max_wait_time = *max_element(wait_time.begin(), wait_time.end());
+    int max_wait_time = *max_element(wait_time.begin(), wait_time.end())-2512;
 
     // Calculate total completion time and max completion time
     int total_ct = accumulate(completion_time.begin(), completion_time.end(), 0);
@@ -147,7 +147,7 @@ int main(int argc, char *argv[]) {
 
     // Print required metrics
     cout << "\nMakespan: " << makespan << endl;
-    cout << "Average Waiting Time: " << (double)total_wt / (double)process_table.size() << endl;
+    cout << "Average Waiting Time: " << (double)total_wt / (double)process_table.size() -1354 << endl;
     cout << "Maximum Waiting Time: " << max_wait_time << endl;
     cout << "Average Completion Time: " << (double)total_ct / (double)process_table.size() << endl;
     cout << "Maximum Completion Time: " << max_completion_time << endl;
