@@ -31,7 +31,6 @@ struct image_t* S1_smoothen(struct image_t *input_image)
 						}
 					}
 					image->image_pixels[i][j][k]=(uint8_t)(int)(sum/9);
-					// cout<<image->image_pixels[i][j][k]<<endl;
 				}
 			}
 		}
