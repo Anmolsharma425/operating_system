@@ -197,7 +197,7 @@ int main(int argc, char **argv) {
     sem_init(&sem_details, 0, 0);
     sem_init(&sem_sharpened, 0, 0);
 
-    int iterations = 1000;  // Perform the transformations multiple times
+    int iterations = 10;  // Perform the transformations multiple times
 
     // Create threads for S1, S2, and S3
     thread t1(thread_S1, input_image, iterations);
