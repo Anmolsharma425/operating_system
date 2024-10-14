@@ -203,9 +203,6 @@ int main(int argc, char **argv) {
         }
     }
 
-<<<<<<< HEAD
-    int iterations = 10;  // Perform the transformations multiple times
-=======
     sharpened_image=new image_t;
     sharpened_image->height=input_image->height;
     sharpened_image->width=input_image->width;
@@ -216,7 +213,6 @@ int main(int argc, char **argv) {
             sharpened_image->image_pixels[i][j]= new uint8_t[3];
         }
     }
->>>>>>> 361d2dc9d3dbeb19a5b7a45bd3ccbcac437df0f0
 
     // initiate the semaphore name,process/thread,initial value
     // for process it is 1 but for thread it is 0
