@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <string.h>
+#include<chrono>
 
 using namespace std;
 
@@ -99,14 +100,13 @@ int main(int argc, char **argv)
 		cerr << "Usage: " << argv[0] << " <input_image.ppm> <output_image.ppm>" << endl;
 		return 1;
 	}
-
 	struct image_t *input_image = read_ppm_file(argv[1]);
 	if (!input_image)
 	{
 		cerr << "Error reading input image." << endl;
 		return -1;
 	}
-
+	auto start=chrono::high_resolution_clock::now();
 	const char *name_1 = "/my_shared_memory_1";
 	const char *name_2 = "/my_shared_memory_2";
 
@@ -141,7 +141,7 @@ int main(int argc, char **argv)
 	uint8_t *smoothened_ptr = (uint8_t *)mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd_1, 0);
 	uint8_t *detail_ptr = (uint8_t *)mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd_2, 0);
 
-	int iterations = 10; // Number of iterations
+	int iterations = 1000; // Number of iterations
 
 	sem_t *sem_smoothened = sem_open("/my_semaphore_1", O_CREAT, 0666, 0);
 	sem_t *sem_detail = sem_open("/my_semaphore_2", O_CREAT, 0666, 0);
@@ -230,6 +230,9 @@ int main(int argc, char **argv)
 
 	// Write the sharpened image to output file
 	write_ppm_file(argv[2], sharpened_image);
+	auto end=chrono::high_resolution_clock::now();
+    chrono::duration<double> elapsed_time = end-start;
+    cout<<"Time to execute using shared memory IPC "<<elapsed_time.count()<<endl;
 
 	sem_close(sem_smoothened);
 	sem_close(sem_detail);
