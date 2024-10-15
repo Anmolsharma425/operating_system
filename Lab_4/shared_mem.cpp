@@ -204,14 +204,13 @@ int main(int argc, char **argv)
 	if (pid1 == 0)
 	{
 		// process_S1(input_image, iterations, smoothened_image, sem_smoothened);  // Run S1 in child process
-		sem_post(sem_smoothened);
 		// sem_init(sem_smoothened, 1, 1);
 		for (int i = 0; i < iterations; i++)
 		{
-			sem_wait(sem_smoothened);
 			struct image_t *smoothened_image = S1_smoothen(input_image);
+			if(i==0)	sem_post(sem_smoothened);
+			sem_wait(sem_smoothened);
 			memcpy(smoothened_ptr, create_shared_image(smoothened_image, smoothened_ptr), size);
-
 			// cout << "S1\n";
 			sem_post(sem_smoothened); // Signal completion of smoothening 0->1
 									  // sem_post(sem_detail);
@@ -232,42 +231,57 @@ int main(int argc, char **argv)
 	}
 	if (pid2 == 0)
 	{
-		struct image_t *smoothened_image;
-		sem_post(sem_detail);
+		uint8_t *smoothened_image=new uint8_t[size];
+		// uint8_t *smoothened_image=new uint8_t[size];
+		struct image_t *details_image;
+		// sleep(1);
 		for (int i = 0; i < iterations; i++)
 		{
-			// cout << "S2\n";
-			sem_wait(sem_detail);
 			sem_wait(sem_smoothened); // Wait for S1 to complete
+			memcpy(smoothened_image, smoothened_ptr, size);
+			memset(smoothened_ptr, (uint8_t)(-1), size);
+			// cout << "S2-1\n";
+			sem_post(sem_smoothened);
 			// cout << "HELLO 3\n";
 			// create_shared_image(smoothened_ptr, smoothened_image);
-			struct image_t *details_image = S2_find_details(input_image, smoothened_ptr);
-			memset(smoothened_ptr, (uint8_t)(-1), size);
+			details_image = S2_find_details(input_image, smoothened_image);
+
+			if (i==0)	sem_post(sem_detail);
+
+			sem_wait(sem_detail);
 			memcpy(detail_ptr, create_shared_image(details_image, detail_ptr), size);
-			// cout<<"S2\n";
+			// cout << "S2-2\n";
 			sem_post(sem_detail); // Signal completion of finding details
-			sem_post(sem_smoothened);
+
 			while(detail_ptr[size/2]!=(uint8_t)(-1)){
 				// cout<<"HELLO 2 ";
+				
 				if(i==iterations-1) break;
 			}
+			while(smoothened_ptr[0]==(uint8_t)(-1)){
+				// cout<<"HELLO 1 ";
+				if(i==iterations-1) break;
+			}
+			// cout<<"\n";
 		}
 		exit(EXIT_SUCCESS);
 	}
 
 	struct image_t *sharpened_image;
 	struct image_t *details_image;
-	// sleep(1);
+	// sleep(2);
+	uint8_t *detail_image=new uint8_t[size];
 	for (int i = 0; i < iterations; i++)
 	{
 		// cout << "HELLO 4\n";
 		sem_wait(sem_detail); // Wait for S2 to complete
-		// create_shared_image(detail_ptr, details_image);
-		// cout << "S3\n";
-		sharpened_image = S3_sharpen(input_image, detail_ptr);
+		memcpy(detail_image, detail_ptr, size);
 		memset(detail_ptr, (uint8_t)(-1), size);
+		// cout << "S3\n";
 		sem_post(sem_detail);
-		cout<<i<<"\n";
+
+		sharpened_image = S3_sharpen(input_image, detail_image);
+		// cout<<i<<"\n";
 		while(detail_ptr[0]==(uint8_t)(-1)){
 			// cout<<"HELLO 3 ";
 			if(i==iterations-1)
