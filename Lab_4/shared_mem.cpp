@@ -12,55 +12,23 @@
 
 using namespace std;
 
-// Declare semaphores and shared memory pointers for the images
-// Create shared memory for images
-uint8_t *create_shared_image(struct image_t *input_image, uint8_t *image)
-{
-	// struct image_t* image = new image_t;
-	// cout<<"HELLO 4\n";
-	// image->width = input_image->width;
-	// image->height = input_image->height;
-
-	image = new uint8_t[input_image->width * input_image->height * 3 * sizeof(uint8_t)];
-	int index = 0;
-	for (int i = 0; i < input_image->height; i++)
-	{
-		// image->image_pixels[i] = new uint8_t*[input_image->width];
-		for (int j = 0; j < input_image->width; j++)
-		{
-			// image->image_pixels[i][j] = new uint8_t[3];
-			for (int k = 0; k < 3; k++)
-			{
-				image[index] = input_image->image_pixels[i][j][k];
-				// cout << (int)image[index] << " ";
-				index++;
-			}
-			// cout << "\n";
-		}
-	}
-	return image;
-}
 
 // S1_smoothen function
-struct image_t *S1_smoothen(struct image_t *input_image)
+uint8_t *S1_smoothen(struct image_t *input_image)
 {
 	// TODO
 	// remember to allocate space for smoothened_image. See read_ppm_file() in libppm.c for some help.
-	struct image_t *image = new struct image_t;
-	image->height = input_image->height;
-	image->width = input_image->width;
-	image->image_pixels = new uint8_t **[image->height];
+	uint8_t* image= new uint8_t[input_image->width*input_image->height*3];
+	int index=0;
 	for (int i = 0; i < input_image->height; i++)
 	{
-		image->image_pixels[i] = new uint8_t *[image->width];
 		for (int j = 0; j < input_image->width; j++)
 		{
-			image->image_pixels[i][j] = new uint8_t[3];
 			for (int k = 0; k < 3; k++)
 			{
 				if (i == 0 || j == 0 || i == input_image->height - 1 || j == input_image->width - 1)
 				{
-					image->image_pixels[i][j][k] = input_image->image_pixels[i][j][k];
+					image[index++] = input_image->image_pixels[i][j][k];
 				}
 				else
 				{
@@ -72,7 +40,7 @@ struct image_t *S1_smoothen(struct image_t *input_image)
 							sum += input_image->image_pixels[r][c][k];
 						}
 					}
-					image->image_pixels[i][j][k] = (uint8_t)(int)(sum / 9);
+					image[index++] = (uint8_t)(int)(sum / 9);
 				}
 			}
 		}
@@ -81,27 +49,20 @@ struct image_t *S1_smoothen(struct image_t *input_image)
 }
 
 // S2_find_details function
-struct image_t *S2_find_details(struct image_t *input_image, uint8_t *smoothened_image)
+uint8_t *S2_find_details(struct image_t *input_image, uint8_t *smoothened_image)
 {
 	// TODO
-	struct image_t *detail = new struct image_t;
-	detail->width = input_image->width;
-	detail->height = input_image->height;
-	detail->image_pixels = new uint8_t **[input_image->height];
 	int index = 0;
+	uint8_t* detail=new uint8_t[input_image->height*input_image->width*3];
 	for (int i = 0; i < input_image->height; i++)
 	{
-		detail->image_pixels[i] = new uint8_t *[input_image->width];
 		for (int j = 0; j < input_image->width; j++)
 		{
-			detail->image_pixels[i][j] = new uint8_t[3];
 			for (int k = 0; k < 3; k++)
 			{
-				// cout<<(int)smoothened_image[index]<<" ";
-				detail->image_pixels[i][j][k] = abs(input_image->image_pixels[i][j][k] - smoothened_image[index++]);
-				// cout<<smoothened_image->image_pixels[i][j][k]<<endl;
+				detail[index]= abs(input_image->image_pixels[i][j][k] - smoothened_image[index]);
+				index++;
 			}
-			// cout<<"\n";
 		}
 	}
 	return detail;
@@ -124,10 +85,8 @@ struct image_t *S3_sharpen(struct image_t *input_image, uint8_t *details_image)
 			sharp->image_pixels[i][j] = new uint8_t[3];
 			for (int k = 0; k < 3; k++)
 			{
-				// cout<<(int)input_image->image_pixels[i][j][k]<<" ";
 				sharp->image_pixels[i][j][k] = min(255, input_image->image_pixels[i][j][k] + details_image[index++]);
 			}
-			// cout<<"\n";
 		}
 	}
 	return sharp;
@@ -165,7 +124,7 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	size_t size = input_image->width * input_image->height * 3 * sizeof(uint8_t)+1;
+	size_t size = input_image->width * input_image->height * 3 * sizeof(uint8_t);
 
 	if (ftruncate(shm_fd_1, size) == -1)
 	{
@@ -182,12 +141,7 @@ int main(int argc, char **argv)
 	uint8_t *smoothened_ptr = (uint8_t *)mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd_1, 0);
 	uint8_t *detail_ptr = (uint8_t *)mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd_2, 0);
 
-	// Create shared memory for images
-	// smoothened_ptr = create_shared_image(input_image, smoothened_ptr);
-	// detail_ptr = create_shared_image(input_image, detail_ptr);
-	// sharpened_image = create_shared_image(input_image);
-
-	int iterations = 500; // Number of iterations
+	int iterations = 10; // Number of iterations
 
 	sem_t *sem_smoothened = sem_open("/my_semaphore_1", O_CREAT, 0666, 0);
 	sem_t *sem_detail = sem_open("/my_semaphore_2", O_CREAT, 0666, 0);
@@ -203,19 +157,17 @@ int main(int argc, char **argv)
 	}
 	if (pid1 == 0)
 	{
-		// process_S1(input_image, iterations, smoothened_image, sem_smoothened);  // Run S1 in child process
-		// sem_init(sem_smoothened, 1, 1);
+		uint8_t* smoothened_image;
 		for (int i = 0; i < iterations; i++)
 		{
-			struct image_t *smoothened_image = S1_smoothen(input_image);
+			smoothened_image = S1_smoothen(input_image);
+
 			if(i==0)	sem_post(sem_smoothened);
+
 			sem_wait(sem_smoothened);
-			memcpy(smoothened_ptr, create_shared_image(smoothened_image, smoothened_ptr), size);
-			// cout << "S1\n";
+			memcpy(smoothened_ptr, smoothened_image, size);
 			sem_post(sem_smoothened); // Signal completion of smoothening 0->1
-									  // sem_post(sem_detail);
 			while(smoothened_ptr[0]!=(uint8_t)(-1)){
-				// cout<<"HELLO 1 ";
 				if(i==iterations-1) break;
 			}
 		}
@@ -223,7 +175,6 @@ int main(int argc, char **argv)
 	}
 
 	pid_t pid2 = fork();
-	// sleep(1);
 	if (pid2 == -1)
 	{
 		perror("fork");
@@ -232,58 +183,42 @@ int main(int argc, char **argv)
 	if (pid2 == 0)
 	{
 		uint8_t *smoothened_image=new uint8_t[size];
-		// uint8_t *smoothened_image=new uint8_t[size];
-		struct image_t *details_image;
-		// sleep(1);
+		uint8_t *detail_image;
 		for (int i = 0; i < iterations; i++)
 		{
 			sem_wait(sem_smoothened); // Wait for S1 to complete
 			memcpy(smoothened_image, smoothened_ptr, size);
 			memset(smoothened_ptr, (uint8_t)(-1), size);
-			// cout << "S2-1\n";
 			sem_post(sem_smoothened);
-			// cout << "HELLO 3\n";
-			// create_shared_image(smoothened_ptr, smoothened_image);
-			details_image = S2_find_details(input_image, smoothened_image);
+			detail_image = S2_find_details(input_image, smoothened_image);
 
 			if (i==0)	sem_post(sem_detail);
 
 			sem_wait(sem_detail);
-			memcpy(detail_ptr, create_shared_image(details_image, detail_ptr), size);
-			// cout << "S2-2\n";
+			memcpy(detail_ptr, detail_image, size);
 			sem_post(sem_detail); // Signal completion of finding details
 
 			while(detail_ptr[size/2]!=(uint8_t)(-1)){
-				// cout<<"HELLO 2 ";
-				
 				if(i==iterations-1) break;
 			}
 			while(smoothened_ptr[0]==(uint8_t)(-1)){
-				// cout<<"HELLO 1 ";
 				if(i==iterations-1) break;
 			}
-			// cout<<"\n";
 		}
 		exit(EXIT_SUCCESS);
 	}
 
 	struct image_t *sharpened_image;
-	struct image_t *details_image;
-	// sleep(2);
 	uint8_t *detail_image=new uint8_t[size];
 	for (int i = 0; i < iterations; i++)
 	{
-		// cout << "HELLO 4\n";
 		sem_wait(sem_detail); // Wait for S2 to complete
 		memcpy(detail_image, detail_ptr, size);
 		memset(detail_ptr, (uint8_t)(-1), size);
-		// cout << "S3\n";
 		sem_post(sem_detail);
 
 		sharpened_image = S3_sharpen(input_image, detail_image);
-		// cout<<i<<"\n";
 		while(detail_ptr[0]==(uint8_t)(-1)){
-			// cout<<"HELLO 3 ";
 			if(i==iterations-1)
 				break;
 		}
