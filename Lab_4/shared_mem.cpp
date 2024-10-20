@@ -9,18 +9,17 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <string.h>
-#include<chrono>
+#include <chrono>
 
 using namespace std;
-
 
 // S1_smoothen function
 uint8_t *S1_smoothen(struct image_t *input_image)
 {
 	// TODO
 	// remember to allocate space for smoothened_image. See read_ppm_file() in libppm.c for some help.
-	uint8_t* image= new uint8_t[input_image->width*input_image->height*3];
-	int index=0;
+	uint8_t *image = new uint8_t[input_image->width * input_image->height * 3];
+	int index = 0;
 	for (int i = 0; i < input_image->height; i++)
 	{
 		for (int j = 0; j < input_image->width; j++)
@@ -54,14 +53,14 @@ uint8_t *S2_find_details(struct image_t *input_image, uint8_t *smoothened_image)
 {
 	// TODO
 	int index = 0;
-	uint8_t* detail=new uint8_t[input_image->height*input_image->width*3];
+	uint8_t *detail = new uint8_t[input_image->height * input_image->width * 3];
 	for (int i = 0; i < input_image->height; i++)
 	{
 		for (int j = 0; j < input_image->width; j++)
 		{
 			for (int k = 0; k < 3; k++)
 			{
-				detail[index]= abs(input_image->image_pixels[i][j][k] - smoothened_image[index]);
+				detail[index] = abs(input_image->image_pixels[i][j][k] - smoothened_image[index]);
 				index++;
 			}
 		}
@@ -93,6 +92,27 @@ struct image_t *S3_sharpen(struct image_t *input_image, uint8_t *details_image)
 	return sharp;
 }
 
+void free_image(struct image_t *image)
+{
+    if (image)
+    {
+        // Free the image pixel data
+        for (int i = 0; i < image->height; i++)
+        {
+            for (int j = 0; j < image->width; j++)
+            {
+                delete[] image->image_pixels[i][j];  // Free each RGB array
+            }
+            delete[] image->image_pixels[i];  // Free each row
+        }
+        delete[] image->image_pixels;  // Free the 2D array holding the rows
+
+        // Finally, free the image struct itself
+        delete image;
+    }
+}
+
+
 int main(int argc, char **argv)
 {
 	if (argc < 3)
@@ -106,7 +126,7 @@ int main(int argc, char **argv)
 		cerr << "Error reading input image." << endl;
 		return -1;
 	}
-	auto start=chrono::high_resolution_clock::now();
+	auto start = chrono::high_resolution_clock::now();
 	const char *name_1 = "/my_shared_memory_1";
 	const char *name_2 = "/my_shared_memory_2";
 
@@ -157,18 +177,24 @@ int main(int argc, char **argv)
 	}
 	if (pid1 == 0)
 	{
-		uint8_t* smoothened_image;
 		for (int i = 0; i < iterations; i++)
 		{
+			uint8_t *smoothened_image;
 			smoothened_image = S1_smoothen(input_image);
 
-			if(i==0)	sem_post(sem_smoothened);
+			if (i == 0)
+				sem_post(sem_smoothened);
 
 			sem_wait(sem_smoothened);
 			memcpy(smoothened_ptr, smoothened_image, size);
 			sem_post(sem_smoothened); // Signal completion of smoothening 0->1
-			while(smoothened_ptr[0]!=(uint8_t)(-1)){
-				if(i==iterations-1) break;
+
+			delete smoothened_image;
+
+			while (smoothened_ptr[0] != (uint8_t)(-1))
+			{
+				if (i == iterations - 1)
+					break;
 			}
 		}
 		exit(EXIT_SUCCESS);
@@ -182,44 +208,63 @@ int main(int argc, char **argv)
 	}
 	if (pid2 == 0)
 	{
-		uint8_t *smoothened_image=new uint8_t[size];
-		uint8_t *detail_image;
+		
 		for (int i = 0; i < iterations; i++)
 		{
+			uint8_t *smoothened_image = new uint8_t[size];
+			uint8_t *detail_image;
+
 			sem_wait(sem_smoothened); // Wait for S1 to complete
 			memcpy(smoothened_image, smoothened_ptr, size);
 			memset(smoothened_ptr, (uint8_t)(-1), size);
 			sem_post(sem_smoothened);
 			detail_image = S2_find_details(input_image, smoothened_image);
 
-			if (i==0)	sem_post(sem_detail);
+			delete smoothened_image;
+
+			if (i == 0)
+				sem_post(sem_detail);
 
 			sem_wait(sem_detail);
 			memcpy(detail_ptr, detail_image, size);
 			sem_post(sem_detail); // Signal completion of finding details
 
-			while(detail_ptr[size/2]!=(uint8_t)(-1)){
-				if(i==iterations-1) break;
+			delete detail_image;
+
+			while (detail_ptr[size / 2] != (uint8_t)(-1))
+			{
+				if (i == iterations - 1)
+					break;
 			}
-			while(smoothened_ptr[0]==(uint8_t)(-1)){
-				if(i==iterations-1) break;
+			while (smoothened_ptr[0] == (uint8_t)(-1))
+			{
+				if (i == iterations - 1)
+					break;
 			}
 		}
 		exit(EXIT_SUCCESS);
 	}
-
+	
 	struct image_t *sharpened_image;
-	uint8_t *detail_image=new uint8_t[size];
 	for (int i = 0; i < iterations; i++)
 	{
+		if(i!=0) struct image_t *sharpened_image;
+		uint8_t *detail_image = new uint8_t[size];
 		sem_wait(sem_detail); // Wait for S2 to complete
 		memcpy(detail_image, detail_ptr, size);
 		memset(detail_ptr, (uint8_t)(-1), size);
 		sem_post(sem_detail);
 
 		sharpened_image = S3_sharpen(input_image, detail_image);
-		while(detail_ptr[0]==(uint8_t)(-1)){
-			if(i==iterations-1)
+
+		if (i != 999)
+			free_image(sharpened_image);
+		
+		delete detail_image;
+
+		while (detail_ptr[0] == (uint8_t)(-1))
+		{
+			if (i == iterations - 1)
 				break;
 		}
 	}
@@ -230,9 +275,9 @@ int main(int argc, char **argv)
 
 	// Write the sharpened image to output file
 	write_ppm_file(argv[2], sharpened_image);
-	auto end=chrono::high_resolution_clock::now();
-    chrono::duration<double> elapsed_time = end-start;
-    cout<<"Time to execute using shared memory IPC "<<elapsed_time.count()<<endl;
+	auto end = chrono::high_resolution_clock::now();
+	chrono::duration<double> elapsed_time = end - start;
+	cout << "Time to execute using shared memory IPC " << elapsed_time.count() << endl;
 
 	sem_close(sem_smoothened);
 	sem_close(sem_detail);

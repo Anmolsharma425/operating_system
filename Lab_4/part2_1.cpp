@@ -5,6 +5,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <stdlib.h>
+#include <chrono>
 
 using namespace std;
 
@@ -24,9 +25,9 @@ void S1_smoothen(struct image_t *input_image, int pipefd_s1_w)
 {
 	// TODO
 	// remember to allocate space for smoothened_image. See read_ppm_file() in libppm.c for some help.
-	uint8_t* flatten=new uint8_t[input_image->width*3];
 	for(int i = 0; i < input_image->height; i++)
 	{
+		uint8_t* flatten=new uint8_t[input_image->width*3];
 		int index=0;
 		for(int j = 0; j < input_image->width; j++)
 		{
@@ -47,16 +48,16 @@ void S1_smoothen(struct image_t *input_image, int pipefd_s1_w)
 			}
 		}
 		write(pipefd_s1_w, flatten, index);
+		delete flatten; 
 	}
-	delete[] flatten; 
 }
 
 void S2_find_details(struct image_t *input_image, int pipefd_s2_w, int pipefd_s1_r)
 {
 	// TODO
-	uint8_t* flatten= new uint8_t[input_image->width*3];
 	for(int i = 0; i < input_image->height; i++)
 	{
+		uint8_t* flatten= new uint8_t[input_image->width*3];
 		int index=0;
 		read(pipefd_s1_r, flatten, input_image->width*3*sizeof(uint8_t));
 		for(int j = 0; j < input_image->width; j++)
@@ -68,8 +69,8 @@ void S2_find_details(struct image_t *input_image, int pipefd_s2_w, int pipefd_s1
 			}
 		}
 		write(pipefd_s2_w, flatten, index);
+		delete flatten; 
 	}
-	delete[] flatten; 
 }
 
 struct image_t* S3_sharpen(struct image_t *input_image, int pipefd_s3_r)
@@ -79,9 +80,9 @@ struct image_t* S3_sharpen(struct image_t *input_image, int pipefd_s3_r)
 	sharp->height=input_image->height;
 	sharp->width=input_image->width;
 	sharp->image_pixels=new uint8_t**[input_image->height];
-	uint8_t* flatten= new uint8_t[input_image->width*3];
 	for(int i = 0; i < input_image->height; i++)
 	{
+		uint8_t* flatten= new uint8_t[input_image->width*3];
 		int index=0;
 		sharp->image_pixels[i]=new uint8_t*[input_image->width];
 		read(pipefd_s3_r, flatten, input_image->width*3*sizeof(uint8_t));
@@ -93,8 +94,8 @@ struct image_t* S3_sharpen(struct image_t *input_image, int pipefd_s3_r)
 				sharp->image_pixels[i][j][k]=min(255, input_image->image_pixels[i][j][k]+flatten[index++]);
 			}
 		}
+		delete flatten; 
 	}
-	delete[] flatten; 
 	return sharp;
 }
 
@@ -112,6 +113,9 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 	struct image_t *input_image = read_ppm_file(argv[1]);
+
+	auto start = chrono::high_resolution_clock::now();
+	
     pid_t cpid1=fork();
     if(cpid1==-1){
         perror("fork");
@@ -159,6 +163,9 @@ int main(int argc, char **argv)
 	struct image_t *sharpened_image;
 	sharpened_image = S3_sharpen(input_image, pipe_s2_s3[0]);
 	write_ppm_file(argv[2], sharpened_image);
+	auto end = chrono::high_resolution_clock::now();
+	chrono::duration<double> elapsed_time = end - start;
+	cout << "Time to execute using pipe IPC " << elapsed_time.count() << endl;
 	free_image(input_image);
 	free_image(sharpened_image);
 	close(pipe_s2_s3[0]);
