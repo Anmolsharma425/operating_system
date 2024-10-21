@@ -90,7 +90,7 @@ void S3_sharpen(struct image_t *input_image, struct image_t *details_image)
 
 void t1_S1(struct image_t *input_image){
     for(int i=0;i<1000;i++){
-        cout<<"hello am in thread 1"<<" "<<i<<endl;
+        // cout<<"hello am in thread 1"<<" "<<i<<endl;
         S1_smoothen(input_image);
         sem_post(&sem_smoothened);
 	}
@@ -99,7 +99,7 @@ void t1_S1(struct image_t *input_image){
 void t2_S2(struct image_t *input_image){
     for(int i=0;i<1000;i++){
         sem_wait(&sem_smoothened);
-        cout<<"hello in thread 2 "<<" "<<i<<endl;
+        // cout<<"hello in thread 2 "<<" "<<i<<endl;
         S2_find_details(input_image,smoothened_image);
         sem_post(&sem_details);
     }
@@ -108,7 +108,7 @@ void t2_S2(struct image_t *input_image){
 void t3_S3(struct image_t *input_image){
     for(int i=0;i<1000;i++){
         sem_wait(&sem_details);
-        cout<<"hello am in thread 3"<<" "<<i<<endl;
+        // cout<<"hello am in thread 3"<<" "<<i<<endl;
         S3_sharpen(input_image,details_image);
         if(i==999){
             sem_post(&sem_sharpened);
@@ -121,7 +121,7 @@ int main(int argc, char **argv)
     auto startTime= chrono::high_resolution_clock::now();
 	if(argc != 3)
 	{
-		cout << "usage: ./a.out <path-to-original-image> <path-to-transformed-image>\n\n";
+		// cout << "usage: ./a.out <path-to-original-image> <path-to-transformed-image>\n\n";
 		exit(0);
 	}
 	struct image_t *input_image = read_ppm_file(argv[1]);
