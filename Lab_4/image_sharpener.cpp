@@ -1,8 +1,21 @@
 #include <iostream>
 #include "libppm.h"
 #include <cstdint>
+#include <chrono>
 
 using namespace std;
+
+void free_image(struct image_t *image) {
+    if (!image) return;
+    for (int i = 0; i < image->height; i++) {
+        for (int j = 0; j < image->width; j++) {
+            delete[] image->image_pixels[i][j];
+        }
+        delete[] image->image_pixels[i];
+    }
+    delete[] image->image_pixels;
+    delete image;
+}
 
 struct image_t* S1_smoothen(struct image_t *input_image)
 {
@@ -58,6 +71,7 @@ struct image_t* S2_find_details(struct image_t *input_image, struct image_t *smo
 			}
 		}
 	}
+	// free_image(smoothened_image);
 	return detail;
 }
 
@@ -80,6 +94,7 @@ struct image_t* S3_sharpen(struct image_t *input_image, struct image_t *details_
 			}
 		}
 	}
+	// free_image(details_image);
 	return sharp;
 }
 
@@ -92,14 +107,31 @@ int main(int argc, char **argv)
 	}
 	
 	struct image_t *input_image = read_ppm_file(argv[1]);
+
+	auto start = chrono::high_resolution_clock::now();
 	
+	for(int i=0;i<999;i++){
 	struct image_t *smoothened_image = S1_smoothen(input_image);
 	
 	struct image_t *details_image = S2_find_details(input_image, smoothened_image);
 	
 	struct image_t *sharpened_image = S3_sharpen(input_image, details_image);
+	free_image(smoothened_image);
+	free_image(details_image);
+	free_image(sharpened_image);
+	}
+
+	struct image_t *smoothened_image = S1_smoothen(input_image);
+	
+	struct image_t *details_image = S2_find_details(input_image, smoothened_image);
+
+	struct image_t *sharpened_image = S3_sharpen(input_image, details_image);
 	
 	write_ppm_file(argv[2], sharpened_image);
+
+	auto end = chrono::high_resolution_clock::now();
+	chrono::duration<double> elapsed_time = end - start;
+	cout << "Time to execute using without IPC " << elapsed_time.count() << endl;
 	
 	return 0;
 }
