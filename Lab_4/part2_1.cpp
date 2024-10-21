@@ -21,6 +21,15 @@ void free_image(struct image_t *image) {
     delete image;
 }
 
+uint32_t calculate_checksum(uint8_t* data, int length) {
+    uint32_t checksum = 0;
+    for (int i = 0; i < length; i++) {
+        checksum += data[i];
+    }
+    return checksum;
+}
+
+
 void S1_smoothen(struct image_t *input_image, int pipefd_s1_w)
 {
 	// TODO
@@ -47,7 +56,9 @@ void S1_smoothen(struct image_t *input_image, int pipefd_s1_w)
 				}
 			}
 		}
+		uint32_t checksum = calculate_checksum(flatten, index);
 		write(pipefd_s1_w, flatten, index);
+		write(pipefd_s1_w, &checksum, sizeof(checksum));
 		delete flatten; 
 	}
 }
@@ -59,7 +70,17 @@ void S2_find_details(struct image_t *input_image, int pipefd_s2_w, int pipefd_s1
 	{
 		uint8_t* flatten= new uint8_t[input_image->width*3];
 		int index=0;
+		uint32_t checksum_received, checksum_calculated;
+		
 		read(pipefd_s1_r, flatten, input_image->width*3*sizeof(uint8_t));
+		read(pipefd_s1_r, &checksum_received, sizeof(checksum_received));
+		checksum_calculated = calculate_checksum(flatten, input_image->width * 3);
+
+		if (checksum_calculated != checksum_received) {
+            cerr << "Checksum mismatch in S2_find_details at line " << i << endl;
+            exit(EXIT_FAILURE);  // Exit if there is a checksum error
+        }
+
 		for(int j = 0; j < input_image->width; j++)
 		{
 			for(int k = 0; k < 3; k++)
@@ -68,7 +89,9 @@ void S2_find_details(struct image_t *input_image, int pipefd_s2_w, int pipefd_s1
 				index++;
 			}
 		}
+		uint32_t detail_checksum = calculate_checksum(flatten, index);
 		write(pipefd_s2_w, flatten, index);
+		write(pipefd_s2_w, &detail_checksum, sizeof(detail_checksum));
 		delete flatten; 
 	}
 }
@@ -84,8 +107,19 @@ struct image_t* S3_sharpen(struct image_t *input_image, int pipefd_s3_r)
 	{
 		uint8_t* flatten= new uint8_t[input_image->width*3];
 		int index=0;
+		uint32_t checksum_received, checksum_calculated;
+
+
 		sharp->image_pixels[i]=new uint8_t*[input_image->width];
 		read(pipefd_s3_r, flatten, input_image->width*3*sizeof(uint8_t));
+		read(pipefd_s3_r, &checksum_received, sizeof(checksum_received));
+		checksum_calculated = calculate_checksum(flatten, input_image->width * 3);
+
+		if (checksum_calculated != checksum_received) {
+            cerr << "Checksum mismatch in S2_find_details at line " << i << endl;
+            exit(EXIT_FAILURE);  // Exit if there is a checksum error
+        }
+		
 		for(int j = 0; j < input_image->width; j++)
 		{
 			sharp->image_pixels[i][j]=new uint8_t[3];
