@@ -198,6 +198,7 @@ int main(int argc, char** argv){
             d++;
             t=t>>1;
         }
+        d--;
         long long p=i.second>>d;
         cout<<p<<"\n";
         if(i.first==0)  pageNumberRecord_0.push_back(p);
@@ -221,6 +222,7 @@ int main(int argc, char** argv){
             d++;
             t=t>>1;
         }
+        d--;
         long long p=i.second>>d;
         if(i.first==0){
             if(!ptable_0.isPagePresent(p, index_0, fstatus_0)){

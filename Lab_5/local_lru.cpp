@@ -131,6 +131,7 @@ int main(int argc, char** argv){
             d++;
             t=t>>1;
         }
+        d--;
         long long p=i.second>>d;
         if(i.first==0){
             if(!ptable_0.isPagePresent(p, index_0, fstatus_0)){
@@ -169,7 +170,6 @@ int main(int argc, char** argv){
             }
             index_3++;
         }
-        
     }
     cout<<pageFault<<"\nP0 : ";
     cout<<ptable_0.perprocess_pagefault<<"\nP1 : ";
