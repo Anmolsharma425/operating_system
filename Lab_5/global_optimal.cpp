@@ -7,8 +7,7 @@ class FrameStatus{
     
     int frameCount;
     bool* isFrameLocked;
-    queue<pair<int, long long>> f_queue;
-    vector<pair<long long, long long>> lastUsed;    //{index, p}
+    vector<pair<long long, uint64_t>> lastUsed;    //{index, p}
 
     FrameStatus(int frameCount){
         this->frameCount=frameCount;
@@ -17,11 +16,10 @@ class FrameStatus{
             lastUsed.push_back({0, 0});
         }
     }
-    int getFrame(long long p){
+    int getFrame(uint64_t p){
         for(int i=0;i<frameCount;i++){
             if(!isFrameLocked[i]){
                 isFrameLocked[i]=true;
-                f_queue.push({i, p});
                 return i;
             }
         }
@@ -31,105 +29,28 @@ class FrameStatus{
 
 class PageTable{
     public:
-    int pageSize;
     int perprocess_pagefault=0;
-    unordered_map<long long, int> pageTable;
-    queue<long long> pageQueue;
-    PageTable(int pageSize){
-        this->pageSize=pageSize;
-    }
-    bool isPagePresent(long long p, long long index, FrameStatus& fstatus){
+    unordered_map<uint64_t, int> pageTable;
+    bool isPagePresent(uint64_t p, long long index, FrameStatus& fstatus){
         if(pageTable.find(p)==pageTable.end()){
             perprocess_pagefault++;
             return false;
         }
-        cout<<p<<"-"<<pageTable[p]<<"\n";
         fstatus.lastUsed[pageTable[p]]={index, p};
         return true;
     }
-    bool insertPage(long long p, FrameStatus& fstatus, long long index){
+    bool insertPage(uint64_t p, FrameStatus& fstatus, long long index){
         int f=fstatus.getFrame(p);
         if(f==-1){
             return false;
         }
         pageTable[p]=f;
-        cout<<p<<" "<<pageTable[p]<<"\n";
         fstatus.lastUsed[pageTable[p]]={index, p};
         return true;
     }            
 };
 
-void replacement_FIFO(FrameStatus& fstatus, PageTable& p0, PageTable& p1, PageTable& p2, PageTable& p3){
-    pair<int, long long> f_p = fstatus.f_queue.front();
-    int f=f_p.first;
-    long long p=f_p.second;
-    fstatus.f_queue.pop();
-    fstatus.isFrameLocked[f]=false;
-    if(p0.pageTable.find(p)!=p0.pageTable.end()){
-        p0.pageTable.erase(p0.pageTable.find(p));
-    }
-    else if(p1.pageTable.find(p)!=p1.pageTable.end()){
-        p1.pageTable.erase(p1.pageTable.find(p));
-    }
-    else if(p2.pageTable.find(p)!=p2.pageTable.end()){
-        p2.pageTable.erase(p2.pageTable.find(p));
-    }
-    else if(p3.pageTable.find(p)!=p3.pageTable.end()){
-        p3.pageTable.erase(p3.pageTable.find(p));
-    }
-}
-
-void replacement_LRU(FrameStatus& fstatus, PageTable& p0, PageTable& p1, PageTable& p2, PageTable& p3){
-    int f, min = INT_MAX;
-    long long p;
-    for(int i=0;i<fstatus.lastUsed.size();i++){
-        if(min>fstatus.lastUsed[i].first){
-            min=fstatus.lastUsed[i].first;
-            f=i;
-            p=fstatus.lastUsed[i].second;
-        }
-    }
-    fstatus.isFrameLocked[f]=false;
-    if(p0.pageTable.find(p)!=p0.pageTable.end()){
-        p0.pageTable.erase(p0.pageTable.find(p));
-    }
-    else if(p1.pageTable.find(p)!=p1.pageTable.end()){
-        p1.pageTable.erase(p1.pageTable.find(p));
-    }
-    else if(p2.pageTable.find(p)!=p2.pageTable.end()){
-        p2.pageTable.erase(p2.pageTable.find(p));
-    }
-    else if(p3.pageTable.find(p)!=p3.pageTable.end()){
-        p3.pageTable.erase(p3.pageTable.find(p));
-    }
-}
-
-void replacement_random(FrameStatus& fstatus, PageTable& p0, PageTable& p1, PageTable& p2, PageTable& p3){
-    // pair<int, long long> f_p = fstatus.f_queue.front();
-    // int f=f_p.first;
-    // long long p=f_p.second;
-    // fstatus.f_queue.pop();
-    // fstatus.isFrameLocked[f]=false;
-    int f = rand()%(fstatus.frameCount);
-    long long p = fstatus.lastUsed[f].second;
-    fstatus.isFrameLocked[f]=false;
-    cout<<p<<"\n";
-
-    if(p0.pageTable.find(p)!=p0.pageTable.end()){
-        p0.pageTable.erase(p0.pageTable.find(p));
-    }
-    if(p1.pageTable.find(p)!=p1.pageTable.end()){
-        p1.pageTable.erase(p1.pageTable.find(p));
-    }
-    if(p2.pageTable.find(p)!=p2.pageTable.end()){
-        p2.pageTable.erase(p2.pageTable.find(p));
-    }
-    if(p3.pageTable.find(p)!=p3.pageTable.end()){
-        p3.pageTable.erase(p3.pageTable.find(p));
-    }
-}
-
-int getFarthestFrame(FrameStatus& fstatus, vector<long long> pageNumberRecord, int index){
+int getFarthestFrame(FrameStatus& fstatus, vector<uint64_t> pageNumberRecord, long long index){
     int farthestFrame=0, farthestPageIndex=-1;
     for(int i=0;i<fstatus.lastUsed.size();i++){
         for(int j=index;j<pageNumberRecord.size();j++){
@@ -141,25 +62,17 @@ int getFarthestFrame(FrameStatus& fstatus, vector<long long> pageNumberRecord, i
                 break;
             }
             if(j+1==pageNumberRecord.size()){
-                cout<<i<<" gFF\n";
                 return i;
             }
         }
     }
-    cout<<farthestFrame<<" gFF\n";
     return farthestFrame;
 }
 
-void replacement_optimal(FrameStatus& fstatus, PageTable& p0, PageTable& p1, PageTable& p2, PageTable& p3, vector<long long> pageNumberRecord, int index){
-    // pair<int, long long> f_p = fstatus.f_queue.front();
-    // int f=f_p.first;
-    // long long p=f_p.second;
-    // fstatus.f_queue.pop();
-    // fstatus.isFrameLocked[f]=false;
+void replacement_optimal(FrameStatus& fstatus, PageTable& p0, PageTable& p1, PageTable& p2, PageTable& p3, vector<uint64_t> pageNumberRecord, long long index){
     int f = getFarthestFrame(fstatus, pageNumberRecord, index);
-    long long p = fstatus.lastUsed[f].second;
+    uint64_t p = fstatus.lastUsed[f].second;
     fstatus.isFrameLocked[f]=false;
-    // cout<<p<<"\n";
 
     if(p0.pageTable.find(p)!=p0.pageTable.end()){
         p0.pageTable.erase(p0.pageTable.find(p));
@@ -190,41 +103,28 @@ int main(int argc, char** argv){
 
     ifstream file(tracePath);
     string line;
-    vector<pair<int, long long>> input;
-    vector<long long> pageNumberRecord;
+    vector<int> input;
+    vector<uint64_t> pageNumberRecord;
     if(file.is_open()){
         while(getline(file, line)){
-            input.push_back({line[0]-'0', stoll(line.substr(2))});
+            uint64_t value;
+            istringstream iss(line.substr(2));
+            iss >> value;
+            input.push_back(line[0]-'0');
+            int d=(int)log2(pageSize);
+            uint64_t p=value>>d;
+            pageNumberRecord.push_back(p);
         }
     }
-    for(auto &i : input){
-        int d=0;
-        int t=pageSize;
-        while(t>0){
-            d++;
-            t=t>>1;
-        }
-        d--;
-        long long p=i.second>>d;
-        cout<<p<<"\n";
-        pageNumberRecord.push_back(p);
-    }
-    PageTable ptable_0 = PageTable(pageSize);
-    PageTable ptable_1 = PageTable(pageSize);
-    PageTable ptable_2 = PageTable(pageSize);
-    PageTable ptable_3 = PageTable(pageSize);
+    PageTable ptable_0 = PageTable();
+    PageTable ptable_1 = PageTable();
+    PageTable ptable_2 = PageTable();
+    PageTable ptable_3 = PageTable();
     FrameStatus fstatus = FrameStatus(numberOfMemFrames);
-    long long index=0;
-    for(auto &i : input){
-        int d=0;
-        int t=pageSize;
-        while(t>0){
-            d++;
-            t=t>>1;
-        }
-        d--;
-        long long p=i.second>>d;
-        if(i.first==0){
+    long long len=input.size();
+    for(long long index=0;index<len;index++){
+        uint64_t p=pageNumberRecord[index];
+        if(input[index]==0){
             if(!ptable_0.isPagePresent(p, index, fstatus)){
                 pageFault++;
                 if(!ptable_0.insertPage(p, fstatus, index)){
@@ -232,7 +132,7 @@ int main(int argc, char** argv){
                     ptable_0.insertPage(p, fstatus, index);
                 }
             }
-        }else if(i.first==1){
+        }else if(input[index]==1){
             if(!ptable_1.isPagePresent( p, index, fstatus)){
                 pageFault++;
                 if(!ptable_1.insertPage(p, fstatus, index)){
@@ -240,7 +140,7 @@ int main(int argc, char** argv){
                     ptable_1.insertPage(p, fstatus, index);
                 }
             }
-        }else if(i.first==2){
+        }else if(input[index]==2){
             if(!ptable_2.isPagePresent(p, index, fstatus)){
                 pageFault++;
                 if(!ptable_2.insertPage(p, fstatus, index)){
@@ -257,8 +157,6 @@ int main(int argc, char** argv){
                 }
             }
         }
-        // cout<<index<<"\n";
-        index++;
     }
     cout<<pageFault<<"\nP0 : ";
     cout<<ptable_0.perprocess_pagefault<<"\nP1 : ";
