@@ -36,7 +36,6 @@ class PageTable{
             perprocess_pagefault++;
             return false;
         }
-        // cout<<p<<" "<<pageTable[p]<<"\n";
         fstatus.lastUsed[pageTable[p]]={index, p};
         return true;
     }
@@ -46,7 +45,6 @@ class PageTable{
             return false;
         }
         pageTable[p]=f;
-        // cout<<p<<" "<<pageTable[p]<<"\n";
         fstatus.lastUsed[pageTable[p]]={index, p};
         return true;
     }            
@@ -55,11 +53,8 @@ class PageTable{
 int getFarthestFrame(FrameStatus& fstatus, unordered_map<uint64_t, vector<int>>& pageNumberRecord, long long index){
     int farthestFrame=0, farthestPageIndex=-1;
     for(int i=0;i<fstatus.lastUsed.size();i++){
-        // if(pageNumberRecord[fstatus.lastUsed[i].second].size()==0)
-        //     return i;
         for(int j=0; j<pageNumberRecord[fstatus.lastUsed[i].second].size(); j++){
             if(pageNumberRecord[fstatus.lastUsed[i].second][j]<index){
-                // cout<<fstatus.lastUsed[i].second<<" : "<<pageNumberRecord[fstatus.lastUsed[i].second][j]<<"\n";
                 pageNumberRecord[fstatus.lastUsed[i].second].erase(pageNumberRecord[fstatus.lastUsed[i].second].begin()+j);
                 j--;
                 continue;
@@ -71,15 +66,10 @@ int getFarthestFrame(FrameStatus& fstatus, unordered_map<uint64_t, vector<int>>&
                 }
                 break;
             }
-            // if(j+1==pageNumberRecord[fstatus.lastUsed[i].second].size()){
-            //     cout<<"farthestFrame : "<<i<<"\n";
-            //     return i;
-            // }
         }
         if(pageNumberRecord[fstatus.lastUsed[i].second].size()==0)
             return i;
     }
-    // cout<<"farthestFrame : "<<farthestFrame<<"\n";
     return farthestFrame;
 }
 
@@ -127,19 +117,11 @@ int main(int argc, char** argv){
             iss >> value;
             int d=(int)log2(pageSize);
             uint64_t p=value>>d;
-            // cout<<p<<"\n";
             input.push_back({line[0]-'0', p});
             pageNumberRecord[p].push_back(index);
             index++;
         }
     }
-    // for(auto i:pageNumberRecord){
-    //     cout<<i.first<<" : ";
-    //     for(int j:i.second){
-    //         // cout<<j<<" ";
-    //     }
-    //     cout<<"\n";
-    // }
     PageTable ptable_0 = PageTable();
     PageTable ptable_1 = PageTable();
     PageTable ptable_2 = PageTable();
@@ -147,7 +129,6 @@ int main(int argc, char** argv){
     FrameStatus fstatus = FrameStatus(numberOfMemFrames);
     long long len=input.size();
     for(long long index=0;index<len;index++){
-        // cout<<index<<"\n";
         uint64_t p=input[index].second;
         if(input[index].first==0){
             if(!ptable_0.isPagePresent(p, index, fstatus)){
