@@ -180,7 +180,7 @@ int main(int argc, char** argv){
             index_3++;
         }
     }
-    cout<<pageFault<<"\nP0 : ";
+    cout<<"Total Page Fault : "<<pageFault<<"\nP0 : ";
     cout<<ptable_0.perprocess_pagefault<<"\nP1 : ";
     cout<<ptable_1.perprocess_pagefault<<"\nP2 : ";
     cout<<ptable_2.perprocess_pagefault<<"\nP3 : ";
